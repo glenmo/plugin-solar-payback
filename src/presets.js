@@ -72,14 +72,43 @@ const tariffs = {
     peakWindows: [[6, 10], [16, 24]], offPeakWindows: [[10, 16]],
     windows: 'Peak 6 am to 10 am and 4 pm to midnight. Off-peak is the solar sponge, 10 am to 4 pm. Shoulder is the overnight off-peak rate, midnight to 6 am.',
   },
+  // Synergy Midday Saver 2026–27, from secondary sources quoting Synergy's brochure. The midday
+  // "super off-peak" maps to offPeak; the overnight off-peak maps to shoulder.
+  tou_synergy: {
+    name: 'Synergy Midday Saver time of use', type: 'tou', peak: 55.33, shoulder: 24.34, offPeak: 8.85,
+    peakStart: 15, peakEnd: 21, offPeakStart: 9, offPeakEnd: 15,
+    windows: 'Peak 3 pm to 9 pm. Off-peak is the super off-peak, 9 am to 3 pm. Shoulder is the overnight off-peak rate, 9 pm to 9 am.',
+  },
+  // Aurora tariff 93 (OTTER 2026–27 standing offer schedule). Two periods; the peak is weekdays only.
+  tou_aurora: {
+    name: 'Aurora Energy time of use (tariff 93)', type: 'tou', peak: 36.19, shoulder: 17.02, offPeak: 17.02,
+    peakWindows: [[7, 10], [16, 21]], offPeakWindows: [[10, 16], [21, 7]], peakWeekdaysOnly: true,
+    windows: 'Peak 7 am to 10 am and 4 pm to 9 pm on weekdays. Off-peak at all other times and all weekend. No shoulder.',
+  },
+  // ActewAGL Home Time-of-use (ACT Standard plan prices from 1 July 2026).
+  tou_actewagl: {
+    name: 'ActewAGL Home time of use', type: 'tou', peak: 49.72, shoulder: 33.57, offPeak: 29.92,
+    peakWindows: [[7, 9], [17, 20]], offPeakWindows: [[22, 7]],
+    windows: 'Peak 7 am to 9 am and 5 pm to 8 pm. Shoulder 9 am to 5 pm and 8 pm to 10 pm. Off-peak 10 pm to 7 am.',
+  },
+  // Jacana Energy residential time of use (Jacana pricing page, 1 July 2026). Two periods: a cheaper
+  // midday rate (offPeak) and one rate at all other times (peak).
+  tou_jacana: {
+    name: 'Jacana Energy time of use', type: 'tou', peak: 33.22, shoulder: 33.22, offPeak: 25.83,
+    peakStart: 15, peakEnd: 9, offPeakStart: 9, offPeakEnd: 15,
+    windows: 'Off-peak 9 am to 3 pm. Peak at all other times. No shoulder.',
+  },
   tou_vic: {
     name: 'Time of use (example)', type: 'tou', peak: 40, shoulder: 28, offPeak: 20, peakStart: 15, peakEnd: 21, offPeakStart: 22, offPeakEnd: 7,
     windows: 'Peak 3 pm to 9 pm, off-peak 10 pm to 7 am, shoulder otherwise.',
   },
 };
 
-// The real TOU tariff for each city that has one. Other cities use the example.
-const touByCity = { melbourne: 'tou_vdo', sydney: 'tou_ausgrid', brisbane: 'tou_energex', adelaide: 'tou_sapn' };
+// Each city's real TOU tariff. A city not listed uses the example.
+const touByCity = {
+  melbourne: 'tou_vdo', sydney: 'tou_ausgrid', brisbane: 'tou_energex', adelaide: 'tou_sapn',
+  perth: 'tou_synergy', hobart: 'tou_aurora', canberra: 'tou_actewagl', darwin: 'tou_jacana',
+};
 
 const presetsApi = { kits, occupancy, tariffs, defaultOffers, touByCity };
 if (typeof module !== 'undefined') module.exports = presetsApi;

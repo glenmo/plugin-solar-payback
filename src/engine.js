@@ -61,23 +61,25 @@ function inWindows(h, windows) {
 // TOU period for an hour of a month (0 = Jan): 'peak', 'shoulder' or 'offPeak'.
 // A tariff gives either peakStart/peakEnd and offPeakStart/offPeakEnd, or lists of
 // windows in peakWindows/offPeakWindows. If it sets peakMonths, peak hours in other
-// months are off-peak.
-function periodForHour(tariff, h, month) {
+// months are off-peak. If it sets peakWeekdaysOnly, peak hours on a weekend day are off-peak.
+function periodForHour(tariff, h, month, weekend) {
   const peakMonth = !tariff.peakMonths || month === undefined || tariff.peakMonths.includes(month);
+  const peakDay = !(weekend && tariff.peakWeekdaysOnly);
   const peak = tariff.peakWindows || [[tariff.peakStart, tariff.peakEnd]];
-  if (inWindows(h, peak)) return peakMonth ? 'peak' : 'offPeak';
+  if (inWindows(h, peak)) return peakMonth && peakDay ? 'peak' : 'offPeak';
   const off = tariff.offPeakWindows || [[tariff.offPeakStart, tariff.offPeakEnd]];
   return inWindows(h, off) ? 'offPeak' : 'shoulder';
 }
 
 // Tariff rate (c/kWh) for an hour.
-function rateForHour(tariff, h, month) {
+function rateForHour(tariff, h, month, weekend) {
   if (tariff.type === 'flat') return tariff.flat;
-  return tariff[periodForHour(tariff, h, month)];
+  return tariff[periodForHour(tariff, h, month, weekend)];
 }
 
-// Dispatch one typical day of a month (0 = Jan). Returns kWh totals and dollar saving for the day.
-function dispatchDay(gen, load, battery, tariff, feedInCents, month) {
+// Dispatch one typical day of a month (0 = Jan), a weekday unless weekend is set.
+// Returns kWh totals and dollar saving for the day.
+function dispatchDay(gen, load, battery, tariff, feedInCents, month, weekend) {
   let soc = 0; // kWh stored
   const cap = battery ? battery.usableKWh : 0;
   const maxCharge = battery ? battery.chargeWatts / 1000 : 0;
@@ -96,7 +98,7 @@ function dispatchDay(gen, load, battery, tariff, feedInCents, month) {
   // A TOU day with no peak hours (outside peakMonths) has nothing to shift energy
   // into, so the battery then works as on a flat tariff.
   const period = [];
-  for (let h = 0; h < 24; h++) period.push(tariff.type === 'tou' ? periodForHour(tariff, h, month) : 'flat');
+  for (let h = 0; h < 24; h++) period.push(tariff.type === 'tou' ? periodForHour(tariff, h, month, weekend) : 'flat');
   const shifting = period.includes('peak');
   const reserve = new Array(24).fill(0);
   const pvAhead = new Array(24).fill(0);
@@ -127,7 +129,7 @@ function dispatchDay(gen, load, battery, tariff, feedInCents, month) {
     selfConsumed = 0; fromBattery = 0; exported = 0; imported = 0; gridCharged = 0;
     savingCents = 0; costCents = 0;
     for (let h = 0; h < 24; h++) {
-      const rate = rateForHour(tariff, h, month);
+      const rate = rateForHour(tariff, h, month, weekend);
       let g = gen[h];
       let l = load[h];
 
@@ -195,10 +197,14 @@ function annualResult(inputs, yieldTable) {
   const days = {};
   for (let m = 0; m < 12; m++) {
     const gen = inputs.panelWatts > 0 ? hourlyGeneration(inputs, yieldTable, m) : new Array(24).fill(0);
-    const d = dispatchDay(gen, load, inputs.battery, inputs.tariff, inputs.feedInCents, m);
-    const n = DAYS_IN_MONTH[m];
-    for (const k of ['selfConsumed', 'fromBattery', 'exported', 'imported', 'gridCharged', 'generation', 'load']) totals[k] += d[k] * n;
-    totals.savingDollars += d.netSavingDollars * n;
+    // A weekday-only peak needs a weekend day too, weighted 2 days in 7.
+    const dayTypes = inputs.tariff.peakWeekdaysOnly ? [[false, 5 / 7], [true, 2 / 7]] : [[false, 1]];
+    for (const [weekend, share] of dayTypes) {
+      const d = dispatchDay(gen, load, inputs.battery, inputs.tariff, inputs.feedInCents, m, weekend);
+      const n = DAYS_IN_MONTH[m] * share;
+      for (const k of ['selfConsumed', 'fromBattery', 'exported', 'imported', 'gridCharged', 'generation', 'load']) totals[k] += d[k] * n;
+      totals.savingDollars += d.netSavingDollars * n;
+    }
     if (m === 0) days.summer = { gen, load };
     if (m === 6) days.winter = { gen, load };
   }

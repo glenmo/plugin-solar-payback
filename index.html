@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Plug-in Solar Payback</title>
 <meta name="description" content="How many years until a plug-in (balcony or backyard) solar system or plug-in battery pays for itself in Australia.">
+<script>
+// Apply a saved theme before first paint. "auto" (no attribute) follows the OS.
+try { var t = localStorage.getItem('theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
 <style>
 :root {
   color-scheme: light;
@@ -72,6 +76,7 @@ body {
   font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 .wrap { max-width: 1160px; margin: 0 auto; padding: 24px 16px 48px; }
+header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 12px 24px; }
 header h1 { font-size: 26px; line-height: 1.2; margin: 0 0 6px; letter-spacing: -0.01em; }
 header p { margin: 0; color: var(--text-2); max-width: 70ch; }
 
@@ -160,8 +165,15 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12px; }
 <body>
 <div class="wrap">
   <header>
-    <h1>Plug-in solar and battery payback calculator</h1>
-    <p>For plug-in (balcony or backyard) solar and plug-in batteries in Australia. Output is capped at the inverter limit and exports are usually unpaid, so payback depends on how much of the power you use yourself.</p>
+    <div>
+      <h1>Plug-in solar and battery payback calculator</h1>
+      <p>For plug-in (balcony or backyard) solar and plug-in batteries in Australia. Output is capped at the inverter limit and exports are usually unpaid, so payback depends on how much of the power you use yourself.</p>
+    </div>
+    <div class="seg" role="group" aria-label="Colour theme">
+      <button type="button" data-theme-choice="auto" aria-pressed="true">Auto</button>
+      <button type="button" data-theme-choice="light" aria-pressed="false">Light</button>
+      <button type="button" data-theme-choice="dark" aria-pressed="false">Dark</button>
+    </div>
   </header>
 
   <div class="layout">

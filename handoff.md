@@ -18,7 +18,8 @@ State of the plug-in solar payback calculator as of 2026-10-20, for continuing i
 - Fixed a browser-only crash: `engine.js` and `presets.js` both declared a top-level `const api`. The export in presets is now `presetsApi`.
 - Added `CLAUDE.md` and updated the README.
 - `node tests/engine.test.js` passes.
-- Checked in headless Chrome at desktop and 390 px width, dark mode only. Light mode hasn't been looked at.
+- Checked in headless Chrome at desktop and 390 px width, in light and dark.
+- Added an Auto / Light / Dark theme control in the header. The choice is saved in `localStorage` (`theme`, absent for auto), and an inline script in `<head>` applies it before first paint.
 
 ## Live: Apache vhost
 
@@ -62,7 +63,6 @@ The server hosts many unrelated sites, so always run `configtest` before a reloa
 - Merge the PR from `ui` to `main`.
 - Check the yield table (`data/yield.json`) against CEC tables or PVGIS, and kit prices in `src/presets.js` against current retail listings. Both are marked provisional, and the page says so.
 - Battery-only TOU scenario: the test only asserts saving > 0, but the 15-year net is about −$988, so it never pays back. Consider a stronger check, or review the preset price.
-- Check the page in light mode.
 - Confirm the footer entity, "Smart Energy Lab Services Pty Ltd".
 
 ## Notes

@@ -88,4 +88,10 @@ for (const r of [base, out, bat, hob, bo, sbt, sot]) {
   assert(Math.abs(lhs - rhs) < 1, `energy balance off by ${lhs - rhs}`);
 }
 
+// 7. Every city has a plausible default offer rate
+for (const city of Object.keys(yieldTable.cities)) {
+  const o = presets.defaultOffers[city];
+  assert(o && o.flat > 15 && o.flat < 60 && o.source, `default offer missing or implausible for ${city}`);
+}
+
 console.log('\nAll tests passed');

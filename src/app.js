@@ -73,8 +73,8 @@
     }
     // Battery only kits only make sense on time of use. Switch to it, and switch
     // back when leaving the kit unless the tariff was changed in the meantime.
-    if (k.panelWatts === 0 && $('tariff').value === 'flat_32') {
-      tariffBeforeBatteryOnly = 'flat_32';
+    if (k.panelWatts === 0 && $('tariff').value === 'default_offer') {
+      tariffBeforeBatteryOnly = 'default_offer';
       $('tariff').value = 'tou_vic';
       applyTariff('tou_vic');
     } else if (k.panelWatts > 0 && tariffBeforeBatteryOnly) {
@@ -92,9 +92,17 @@
 
   function applyTariff(key) {
     const t = presets.tariffs[key];
-    if (t.type === 'flat') setNum('flat', t.flat);
+    if (key === 'default_offer') applyDefaultOffer();
+    else if (t.type === 'flat') setNum('flat', t.flat);
     else for (const f of ['peak', 'shoulder', 'offPeak']) setNum(f, t[f]);
     syncTariffFields();
+  }
+
+  // Flat rate from the city's default (regulated reference) offer.
+  function applyDefaultOffer() {
+    const o = presets.defaultOffers[$('city').value];
+    setNum('flat', o ? o.flat : presets.tariffs.default_offer.flat);
+    $('flatSource').textContent = o ? o.source : '';
   }
 
   function syncBatteryFields() {
@@ -116,6 +124,7 @@
     const tou = presets.tariffs[$('tariff').value].type === 'tou';
     document.querySelector('.tou-only').hidden = !tou;
     document.querySelector('.flat-only').hidden = tou;
+    $('flatSource').hidden = $('tariff').value !== 'default_offer';
   }
 
   function readInputs() {
@@ -465,8 +474,8 @@
     $('city').value = d.city;
     $('mounting').value = d.mounting;
     $('occupancy').value = 'home_all_day';
-    $('tariff').value = 'flat_32';
-    applyTariff('flat_32');
+    $('tariff').value = 'default_offer';
+    applyTariff('default_offer');
     applyOccupancy('home_all_day');
     setNum('feedInCents', d.feedInCents);
     setNum('shadingLoss', Math.round(d.shadingLoss * 100));
@@ -482,6 +491,11 @@
 
     $('kit').addEventListener('change', (e) => { applyKit(e.target.value); render(); });
     $('occupancy').addEventListener('change', (e) => { applyOccupancy(e.target.value); render(); });
+    // A new city brings its own default offer. While a battery-only kit has switched
+    // to TOU, the flat field still updates so the rate is right when switching back.
+    $('city').addEventListener('change', () => {
+      if ($('tariff').value === 'default_offer' || tariffBeforeBatteryOnly === 'default_offer') { applyDefaultOffer(); syncTariffFields(); }
+    });
     $('tariff').addEventListener('change', (e) => { tariffBeforeBatteryOnly = null; applyTariff(e.target.value); render(); });
     $('hasBattery').addEventListener('change', toggleBattery);
     $('inputs').addEventListener('input', render);

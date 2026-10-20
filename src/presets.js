@@ -54,7 +54,7 @@ const tariffs = {
     peakStart: 16, peakEnd: 21, offPeakStart: 11, offPeakEnd: 16,
     windows: 'Peak 4 pm to 9 pm. Off-peak is the VDO solar soak, 11 am to 4 pm. Shoulder is the VDO off-peak rate, all other times.',
   },
-  // DMO 2026–27 time of use, from secondary sources (see docs/METHOD.md). Unverified against the AER.
+  // DMO 2026–27 time of use (AER DMO 2026–27 final determination, Appendix C 9(3)).
   // Ausgrid has two periods; its peak only applies Nov to Mar and Jun to Aug, so shoulder is set to off-peak.
   tou_ausgrid: {
     name: 'Default Market Offer time of use (Ausgrid)', type: 'tou', peak: 60.2, shoulder: 24.04, offPeak: 24.04,

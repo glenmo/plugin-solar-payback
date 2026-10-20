@@ -47,19 +47,18 @@ The default tariff is a flat rate set from each city's default (reference) offer
 | City | c/kWh | Offer | Source |
 |---|---|---|---|
 | Melbourne | 25.96 | Victorian Default Offer, CitiPower | ESC VDO 2026–27 Price Determination, Schedule 1 |
-| Sydney | 33.14 | Default Market Offer, Ausgrid | Secondary sources (a) |
-| Brisbane | 27.97 | Default Market Offer, Energex | Secondary sources (a) |
-| Adelaide | 41.91 | Default Market Offer, SA Power Networks | Secondary sources (a) |
+| Sydney | 33.14 | Default Market Offer, Ausgrid | AER DMO 2026–27 final determination, Appendix C 9(1) (a) |
+| Brisbane | 27.97 | Default Market Offer, Energex | AER DMO 2026–27 final determination, Appendix C 9(1) (a) |
+| Adelaide | 41.91 | Default Market Offer, SA Power Networks | AER DMO 2026–27 final determination, Appendix C 9(1) (a) |
 | Perth | 33.26 | Synergy A1, regulated | Secondary sources quoting Synergy's 1 July 2026 brochure |
 | Hobart | 24.75 | Aurora tariff 32 (Residential Single Rate), regulated | OTTER 2026–27 standing offer schedule, 2.7 |
 | Canberra | 36.95 | ActewAGL Home, standing offer | ActewAGL ACT Standard plan prices from 1 July 2026 |
 | Darwin | 31.68 | Jacana residential, regulated | Jacana Energy pricing page |
 
-(a) The DMO is an annual bill cap, not a usage rate. These rates were taken from comparison
-sites, then checked against the AER's final annual DMO prices: supply plus rate times the
-reference usage gives Ausgrid $1,898 (DMO $1,899 at 3,900 kWh), Energex $1,987 ($1,988 at
-4,600 kWh) and SAPN $2,333 ($2,334 at 4,000 kWh). Check them against the AER final
-determination before release.
+(a) Appendix C of the AER's final determination ("Default market offer prices 2026–27:
+Final determination", May 2026) sets a usage charge cap as well as the annual price:
+Ausgrid 33.1372 c (supply 166.2289 c/day), Energex 27.9744 c (192.0159 c/day) and SAPN
+41.9103 c (180.0512 c/day). Checked 2026-10-20.
 
 Suburbs on other networks pay different rates (for example 27.35 to 31.98 c in other
 Melbourne zones), so the rate stays editable. Changing city resets it to that city's offer.
@@ -72,23 +71,21 @@ sets its unused period to the same rate as the period it falls into.
 | Preset | Peak | Shoulder | Off-peak | Source |
 |---|---|---|---|---|
 | `tou_vdo` Melbourne, VDO CitiPower | 38.31 c, 4 pm to 9 pm | 21.17 c, other times | 16.59 c solar soak, 11 am to 4 pm | ESC VDO 2026–27 Price Determination, Schedule 3 |
-| `tou_ausgrid` Sydney, DMO | 60.20 c, 3 pm to 9 pm, Nov to Mar and Jun to Aug | none (set to off-peak) | 24.04 c, other times, and all day in Apr, May, Sep, Oct | Secondary sources (b) |
-| `tou_energex` Brisbane, DMO | 47.79 c, 4 pm to 9 pm | 25.30 c, 9 pm to 11 am | 6.98 c, 11 am to 4 pm | Secondary sources (b) |
-| `tou_sapn` Adelaide, DMO | 56.22 c, 6 am to 10 am and 4 pm to midnight | 32.55 c overnight, midnight to 6 am | 17.04 c solar sponge, 10 am to 4 pm | Secondary sources (b) |
+| `tou_ausgrid` Sydney, DMO | 60.20 c, 3 pm to 9 pm, Nov to Mar and Jun to Aug | none (set to off-peak) | 24.04 c, other times, and all day in Apr, May, Sep, Oct | AER DMO 2026–27 final determination, Appendix C 9(3) (b) |
+| `tou_energex` Brisbane, DMO | 47.79 c, 4 pm to 9 pm | 25.30 c, 9 pm to 11 am | 6.98 c, 11 am to 4 pm | AER DMO 2026–27 final determination, Appendix C 9(3) (b) |
+| `tou_sapn` Adelaide, DMO | 56.22 c, 6 am to 10 am and 4 pm to midnight | 32.55 c overnight, midnight to 6 am | 17.04 c solar sponge, 10 am to 4 pm | AER DMO 2026–27 final determination, Appendix C 9(3) (b) |
 | `tou_synergy` Perth, Synergy Midday Saver | 55.33 c, 3 pm to 9 pm | 24.34 c overnight, 9 pm to 9 am | 8.85 c super off-peak, 9 am to 3 pm | Secondary sources (c) |
 | `tou_aurora` Hobart, Aurora tariff 93 | 36.19 c, 7 am to 10 am and 4 pm to 9 pm, weekdays only | none | 17.02 c, other times and all weekend | OTTER 2026–27 standing offer schedule, 2.6 |
 | `tou_actewagl` Canberra, ActewAGL Home TOU | 49.72 c, 7 am to 9 am and 5 pm to 8 pm | 33.57 c, 9 am to 5 pm and 8 pm to 10 pm | 29.92 c, 10 pm to 7 am | ActewAGL ACT Standard plan prices from 1 July 2026 |
 | `tou_jacana` Darwin, Jacana TOU | 33.22 c, 3 pm to 9 am | none | 25.83 c, 9 am to 3 pm | Jacana Energy pricing page, from 1 July 2026 |
 | `tou_vic` example | 40 c, 3 pm to 9 pm | 28 c | 20 c, 10 pm to 7 am | Example only, kept in the list |
 
-(b) Taken from wattmaths.com.au, which cites Appendix C of the AER final determination for
-the Ausgrid off-peak rate but gives no document for the others. HomeBillLab and EcoFlow
-give the same Ausgrid rates. The windows match each network's 2026–27 tariff structure
-(Ausgrid via Amber, Energex's residential tariff page, SAPN's 2026–27 statement of
-compliance). Unlike the flat rates, these can't be checked against the annual DMO price,
-because that needs the AER's assumed usage split. Sources disagree on Ausgrid's peak
-season and on SAPN's rates (another site gives 58.84 / 35.17 c). Check all three against
-the AER final determination before release.
+(b) Appendix C 9(3), residential time of use tariff cap: Ausgrid 60.1966 / 24.0387 c, with
+the peak only Nov to Mar and Jun to Aug, every day; Energex 47.7858 / 25.2956 / 6.9848 c;
+SAPN 56.2218 c peak, 32.5506 c overnight off-peak, 17.0431 c solar sponge. Windows are local
+time, including daylight saving. Checked 2026-10-20. The determination also sets a Solar
+Sharer Offer tariff (Appendix C 9(6)), with three free hours in the middle of the day. The
+calculator doesn't model it.
 
 (c) talkenergy.com.au and perthsolarwarehouse.com.au, quoting Synergy's 1 July 2026
 brochure. They agree to four decimal places (55.3253, 24.3431, 8.8520). Not checked

@@ -94,6 +94,17 @@
     $('batteryFields').disabled = !$('hasBattery').checked;
   }
 
+  // Ticking or unticking the battery switches to the matching solar kit, so the
+  // upfront cost includes (or drops) the battery instead of modelling it for free.
+  function toggleBattery() {
+    const want = $('hasBattery').checked;
+    if (!!presets.kits[$('kit').value].battery !== want) {
+      const key = Object.keys(presets.kits).find((k) => !!presets.kits[k].battery === want && presets.kits[k].panelWatts > 0);
+      if (key) { $('kit').value = key; applyKit(key); return; }
+    }
+    syncBatteryFields();
+  }
+
   function syncTariffFields() {
     const tou = presets.tariffs[$('tariff').value].type === 'tou';
     document.querySelector('.tou-only').hidden = !tou;
@@ -465,7 +476,7 @@
     $('kit').addEventListener('change', (e) => { applyKit(e.target.value); render(); });
     $('occupancy').addEventListener('change', (e) => { applyOccupancy(e.target.value); render(); });
     $('tariff').addEventListener('change', (e) => { applyTariff(e.target.value); render(); });
-    $('hasBattery').addEventListener('change', syncBatteryFields);
+    $('hasBattery').addEventListener('change', toggleBattery);
     $('inputs').addEventListener('input', render);
     $('inputs').addEventListener('change', render);
     $('inputs').addEventListener('submit', (e) => e.preventDefault());

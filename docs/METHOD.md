@@ -63,15 +63,32 @@ determination before release.
 
 Suburbs on other networks pay different rates (for example 27.35 to 31.98 c in other
 Melbourne zones), so the rate stays editable. Changing city resets it to that city's offer.
-Two TOU presets:
-- `tou_vdo`: the Victorian Default Offer three-period TOU for CitiPower (ESC VDO 2026–27
-  Price Determination, Schedule 3): peak 38.31 c 4 pm to 9 pm, solar soak 16.59 c 11 am to
-  4 pm, 21.17 c at all other times. The solar soak is the cheapest period, so it is the
-  engine's `offPeak` and the VDO's "off-peak" is the engine's `shoulder`. The battery-only
-  kit switches to it in Melbourne.
-- `tou_vic`: an example (40 / 28 / 20 c, overnight off-peak), used elsewhere.
 
-The off-peak window can wrap midnight (22 to 7) or sit inside the day (11 to 16).
+TOU presets. The battery-only kit switches to the city's own (`presets.touByCity`) and to
+the example elsewhere. Where a tariff's cheapest period is a midday solar soak, that is
+the engine's `offPeak` and the tariff's own "off-peak" is the engine's `shoulder`.
+
+| Preset | Peak | Shoulder | Off-peak | Source |
+|---|---|---|---|---|
+| `tou_vdo` Melbourne, VDO CitiPower | 38.31 c, 4 pm to 9 pm | 21.17 c, other times | 16.59 c solar soak, 11 am to 4 pm | ESC VDO 2026–27 Price Determination, Schedule 3 |
+| `tou_ausgrid` Sydney, DMO | 60.20 c, 3 pm to 9 pm, Nov to Mar and Jun to Aug | none (set to off-peak) | 24.04 c, other times, and all day in Apr, May, Sep, Oct | Secondary sources (b) |
+| `tou_energex` Brisbane, DMO | 47.79 c, 4 pm to 9 pm | 25.30 c, 9 pm to 11 am | 6.98 c, 11 am to 4 pm | Secondary sources (b) |
+| `tou_sapn` Adelaide, DMO | 56.22 c, 6 am to 10 am and 4 pm to midnight | 32.55 c overnight, midnight to 6 am | 17.04 c solar sponge, 10 am to 4 pm | Secondary sources (b) |
+| `tou_vic` example | 40 c, 3 pm to 9 pm | 28 c | 20 c, 10 pm to 7 am | Example only |
+
+(b) Taken from wattmaths.com.au, which cites Appendix C of the AER final determination for
+the Ausgrid off-peak rate but gives no document for the others. HomeBillLab and EcoFlow
+give the same Ausgrid rates. The windows match each network's 2026–27 tariff structure
+(Ausgrid via Amber, Energex's residential tariff page, SAPN's 2026–27 statement of
+compliance). Unlike the flat rates, these can't be checked against the annual DMO price,
+because that needs the AER's assumed usage split. Sources disagree on Ausgrid's peak
+season and on SAPN's rates (another site gives 58.84 / 35.17 c). Check all three against
+the AER final determination before release.
+
+Windows can wrap midnight (22 to 7) or sit inside the day (11 to 16), and a tariff can
+list several (`peakWindows`, `offPeakWindows`). With `peakMonths`, peak hours outside
+those months are off-peak. A day with no peak hours has nothing to shift energy into, so
+the battery then works as on a flat tariff: no holding, no reserve, no grid charging.
 
 ## Dispatch, each hour
 1. PV meets load directly
@@ -84,8 +101,9 @@ The off-peak window can wrap midnight (22 to 7) or sit inside the day (11 to 16)
 5. Grid meets the rest
 6. On TOU with grid charging enabled, battery charges from grid during off-peak if
    peak rate x round trip efficiency beats the off-peak rate. It leaves room for the PV
-   surplus still due before the next peak, so a midday solar soak doesn't fill the
-   battery from the grid and export the PV
+   surplus still due before the next peak, looking across midnight to the next morning,
+   less any shoulder use before that PV arrives. This stops a solar soak, or an off-peak
+   that runs through the morning, filling the battery from the grid and exporting the PV
 
 Each month is run twice so the battery state settles, then scaled by days in month.
 

@@ -71,9 +71,9 @@
       setNum('roundTripEff', Math.round(k.battery.roundTripEff * 100));
       $('gridCharge').checked = !!k.battery.gridCharge;
     }
-    // Battery only kits only make sense on time of use. Switch to it (the VDO one in
-    // Melbourne), and switch back when leaving the kit unless the tariff was changed
-    // in the meantime.
+    // Battery only kits only make sense on time of use. Switch to it (the city's own
+    // where there is one), and switch back when leaving the kit unless the tariff was
+    // changed in the meantime.
     if (k.panelWatts === 0 && $('tariff').value === 'default_offer') {
       tariffBeforeBatteryOnly = 'default_offer';
       $('tariff').value = cityTou();
@@ -86,9 +86,9 @@
     syncBatteryFields();
   }
 
-  // The TOU preset a battery-only kit switches to: the real VDO one in Melbourne.
+  // The TOU preset a battery-only kit switches to: the city's real one where there is one.
   function cityTou() {
-    return $('city').value === 'melbourne' ? 'tou_vdo' : 'tou_vic';
+    return presets.touByCity[$('city').value] || 'tou_vic';
   }
 
   function applyOccupancy(key) {

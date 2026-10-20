@@ -40,7 +40,7 @@ const defaultOffers = {
   brisbane: { flat: 27.97, source: 'Default Market Offer 2026–27, Energex' },
   adelaide: { flat: 41.91, source: 'Default Market Offer 2026–27, SA Power Networks' },
   perth: { flat: 33.26, source: 'Synergy A1 regulated tariff 2026–27' },
-  hobart: { flat: 27.95, source: 'Aurora Energy tariff 31 regulated price 2026–27' },
+  hobart: { flat: 24.75, source: 'Aurora Energy tariff 32 regulated price 2026–27' },
   canberra: { flat: 36.95, source: 'ActewAGL standing offer (Home) 2026–27' },
   darwin: { flat: 31.68, source: 'Jacana Energy regulated residential tariff 2026–27' },
 };

@@ -60,7 +60,8 @@ The server hosts many unrelated sites, so always run `configtest` before a reloa
 
 ## Not done yet
 
-- Check the yield table (`data/yield.json`) against CEC tables or PVGIS, and kit prices in `src/presets.js` against current retail listings. Both are marked provisional, and the page says so.
+- Check kit prices in `src/presets.js` against current retail listings. They are marked provisional, and the page says so.
+- Optionally spot check a few cities in `data/yield.json` against BoM or CEC figures. The values are PVGIS-ERA5 averages (see `docs/METHOD.md`).
 - Battery-only TOU scenario: the test only asserts saving > 0, but the 15-year net is about −$988, so it never pays back. Consider a stronger check, or review the preset price.
 - Confirm the footer entity, "Smart Energy Lab Services Pty Ltd".
 

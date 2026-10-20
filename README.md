@@ -43,8 +43,8 @@ because the page fetches `data/yield.json`.
 
 ## Status
 
-Phase 2: engine, test harness and UI built. Yield table and kit prices are still
-provisional.
+Phase 2: engine, test harness and UI built. The yield table is from PVGIS
+(see `docs/METHOD.md`). Kit prices are still provisional.
 
 ## Licence
 

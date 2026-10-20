@@ -20,6 +20,7 @@ State of the plug-in solar payback calculator as of 2026-10-20, for continuing i
 - `node tests/engine.test.js` passes.
 - Checked in headless Chrome at desktop and 390 px width, in light and dark.
 - Fixed TOU battery dispatch: the battery used to spend its overnight charge in the morning shoulder and was empty by the 3 pm peak. It now keeps a peak reserve. Battery only on TOU went from $29/yr (never pays back) to $105/yr (12.3 years). Tests now check that battery output is worth the peak rate, and that PV still refills the battery on TOU.
+- Footer entity "Smart Energy Lab Services Pty Ltd" confirmed correct by Glen (2026-10-20).
 - Added an Auto / Light / Dark theme control in the header. The choice is saved in `localStorage` (`theme`, absent for auto), and an inline script in `<head>` applies it before first paint.
 
 ## Live: Apache vhost
@@ -64,7 +65,6 @@ The server hosts many unrelated sites, so always run `configtest` before a reloa
 - Kit prices in `src/presets.js` stay provisional. Checked 2026-10-20: plug-in systems aren't yet legal to connect in Australia, so there's no local retail market. The one AU listing (Sunplug, 960 W + 800 W micro, A$1,398 preorder) supports the $1,200 solar kit. German prices suggest the battery kits ($2,400 and $1,500) are high. Revisit once AU pricing exists.
 - The page has a "Not yet legal in Australia" notice under the header (`.notice` in `index.html`). Update or remove it when the rules change.
 - Optionally spot check a few cities in `data/yield.json` against BoM or CEC figures. The values are PVGIS-ERA5 averages (see `docs/METHOD.md`).
-- Confirm the footer entity, "Smart Energy Lab Services Pty Ltd".
 
 ## Notes
 

@@ -79,6 +79,8 @@ body {
 header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 12px 24px; }
 header h1 { font-size: 26px; line-height: 1.2; margin: 0 0 6px; letter-spacing: -0.01em; }
 header p { margin: 0; color: var(--text-2); max-width: 70ch; }
+.notice { margin: 16px 0 0; padding: 10px 14px; border: 1px solid var(--border); border-left: 3px solid var(--load); border-radius: 8px; background: var(--surface); color: var(--text-2); font-size: 14px; max-width: 90ch; }
+.notice strong { color: var(--text); }
 
 .layout { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 20px; margin-top: 24px; align-items: start; }
 @media (max-width: 860px) { .layout { grid-template-columns: minmax(0, 1fr); } }
@@ -175,6 +177,8 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12px; }
       <button type="button" data-theme-choice="dark" aria-pressed="false">Dark</button>
     </div>
   </header>
+
+  <p class="notice" role="note"><strong>Not yet legal in Australia.</strong> Plug-in solar panels and batteries can't currently be connected through a household power point here. In September 2026, energy ministers agreed to look at a safe pathway to allow them. This calculator shows what payback could look like if they're approved. Don't connect an overseas kit in the meantime.</p>
 
   <div class="layout">
     <form id="inputs" class="card" autocomplete="off" novalidate>
@@ -306,6 +310,7 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12px; }
           <li>Sun hours are long-term averages from the EU's PVGIS service for each capital city. Kit prices are provisional estimates.</li>
           <li>Standby draw from the inverter and battery is not included.</li>
           <li>Daily supply charges are unchanged by plug-in systems and are left out.</li>
+          <li>Plug-in systems are not yet approved for connection in Australia, so there are no local retail prices to check the kit prices against.</li>
         </ul>
       </section>
     </main>

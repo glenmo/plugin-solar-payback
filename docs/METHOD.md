@@ -51,7 +51,7 @@ The default tariff is a flat rate set from each city's default (reference) offer
 | Brisbane | 27.97 | Default Market Offer, Energex | Secondary sources (a) |
 | Adelaide | 41.91 | Default Market Offer, SA Power Networks | Secondary sources (a) |
 | Perth | 33.26 | Synergy A1, regulated | Secondary sources quoting Synergy's 1 July 2026 brochure |
-| Hobart | 27.95 | Aurora tariff 31, regulated | OTTER 2026–27 standing offer schedule |
+| Hobart | 24.75 | Aurora tariff 32 (Residential Single Rate), regulated | OTTER 2026–27 standing offer schedule, 2.7 |
 | Canberra | 36.95 | ActewAGL Home, standing offer | ActewAGL ACT Standard plan prices from 1 July 2026 |
 | Darwin | 31.68 | Jacana residential, regulated | Jacana Energy pricing page |
 

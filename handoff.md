@@ -19,6 +19,7 @@ State of the plug-in solar payback calculator as of 2026-10-20, for continuing i
 - Added `CLAUDE.md` and updated the README.
 - `node tests/engine.test.js` passes.
 - Checked in headless Chrome at desktop and 390 px width, in light and dark.
+- Fixed TOU battery dispatch: the battery used to spend its overnight charge in the morning shoulder and was empty by the 3 pm peak. It now keeps a peak reserve. Battery only on TOU went from $29/yr (never pays back) to $105/yr (12.3 years). Tests now check that battery output is worth the peak rate, and that PV still refills the battery on TOU.
 - Added an Auto / Light / Dark theme control in the header. The choice is saved in `localStorage` (`theme`, absent for auto), and an inline script in `<head>` applies it before first paint.
 
 ## Live: Apache vhost
@@ -62,7 +63,6 @@ The server hosts many unrelated sites, so always run `configtest` before a reloa
 
 - Check kit prices in `src/presets.js` against current retail listings. They are marked provisional, and the page says so.
 - Optionally spot check a few cities in `data/yield.json` against BoM or CEC figures. The values are PVGIS-ERA5 averages (see `docs/METHOD.md`).
-- Battery-only TOU scenario: the test only asserts saving > 0, but the 15-year net is about −$988, so it never pays back. Consider a stronger check, or review the preset price.
 - Confirm the footer entity, "Smart Energy Lab Services Pty Ltd".
 
 ## Notes

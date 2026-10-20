@@ -22,7 +22,10 @@ A four part profile: baseload (24 h), morning bump (6 to 9), daytime (9 to 17), 
 1. PV meets load directly
 2. Surplus PV charges the battery (charge rate and capacity limited)
 3. Remaining surplus is exported at the feed-in rate (default 0 c)
-4. Battery meets remaining load (discharge rate limited; held through off-peak on TOU)
+4. Battery meets remaining load (discharge rate limited; held through off-peak on TOU).
+   On TOU it also keeps a reserve through shoulder hours for the rest of the day's peak:
+   the expected peak shortfall (capped at one full battery) less the PV surplus still
+   due to refill it before the peak. This uses foresight of the typical day.
 5. Grid meets the rest
 6. On TOU with grid charging enabled, battery charges from grid during off-peak if
    peak rate x round trip efficiency beats the off-peak rate

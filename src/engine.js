@@ -72,6 +72,20 @@ function dispatchDay(gen, load, battery, tariff, feedInCents) {
   let selfConsumed = 0, fromBattery = 0, exported = 0, imported = 0, gridCharged = 0;
   let savingCents = 0, costCents = 0;
 
+  // On TOU, keep enough charge for the rest of today's peak hours rather than
+  // spending it in the shoulder. reserve[h] is the battery output still wanted
+  // in peak hours after h (at most a full battery), less the PV surplus expected
+  // to top it up before then.
+  const reserve = new Array(24).fill(0);
+  if (cap > 0 && tariff.type === 'tou') {
+    let need = 0, refill = 0;
+    for (let h = 23; h >= 0; h--) {
+      reserve[h] = Math.max(0, Math.min(need, cap * eff) - refill * eff * eff);
+      if (rateForHour(tariff, h) === tariff.peak) need += Math.min(Math.max(load[h] - gen[h], 0), maxDischarge);
+      else if (need > 0) refill += Math.min(Math.max(gen[h] - load[h], 0), maxCharge);
+    }
+  }
+
   // Run two passes so battery state settles (day 1 charges, day 2 is representative).
   for (let pass = 0; pass < 2; pass++) {
     selfConsumed = 0; fromBattery = 0; exported = 0; imported = 0; gridCharged = 0;
@@ -101,10 +115,12 @@ function dispatchDay(gen, load, battery, tariff, feedInCents) {
         savingCents += g * feedInCents;
       }
 
-      // 4. Battery covers remaining load (but hold charge through off peak on TOU, it's cheaper to import then)
+      // 4. Battery covers remaining load (but hold charge through off peak on TOU, it's cheaper
+      //    to import then, and keep the peak reserve through the shoulder)
       const isOffPeak = tariff.type === 'tou' && rate === tariff.offPeak;
-      if (l > 0 && soc > 0 && !isOffPeak) {
-        const dis = Math.min(l, soc * eff, maxDischarge);
+      const spare = soc * eff - (rate === tariff.peak ? 0 : reserve[h]);
+      if (l > 0 && spare > 0 && !isOffPeak) {
+        const dis = Math.min(l, spare, maxDischarge);
         soc -= dis / eff;
         fromBattery += dis;
         savingCents += dis * rate;

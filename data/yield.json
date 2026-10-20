@@ -1,5 +1,5 @@
 {
-  "_note": "Monthly mean plane-of-array irradiation, equivalent to peak sun hours (kWh/m2/day), per city for three mountings. Months run Jan to Dec. Source: PVGIS 5.3 MRcalc, PVGIS-ERA5 radiation database, mean of 2005 to 2023, with DEM horizon shading, at each city's CBD coordinates. All mountings face north (PVGIS aspect 180). tilted = slope equal to latitude rounded to a whole degree, flat = horizontal, vertical = 90 degree slope. ERA5 is reanalysis data, so a spot check against BoM or CEC figures is still worthwhile.",
+  "_note": "Monthly mean plane-of-array irradiation, equivalent to peak sun hours (kWh/m2/day), per city for three mountings. Months run Jan to Dec. Source: PVGIS 5.3 MRcalc, PVGIS-ERA5 radiation database, mean of 2005 to 2023, with DEM horizon shading, at each city's CBD coordinates. All mountings face north (PVGIS aspect 180). tilted = slope equal to latitude rounded to a whole degree, flat = horizontal, vertical = 90 degree slope. Flat values agree with BoM mean daily solar exposure within about 6% a year (checked 2026-10-20, see docs/METHOD.md).",
   "cities": {
     "melbourne": {
       "name": "Melbourne",

@@ -29,5 +29,5 @@ To view the app, serve the folder (`python3 -m http.server`) and open it. Openin
 
 - Units: power in W, energy in kWh, tariffs in c/kWh, money in dollars. Rates such as `shadingLoss`, `degradation` and `roundTripEff` are fractions (0–1).
 - Plug-in defaults that differ from rooftop solar: inverter output capped at 800 W (generation is clipped per hour), feed-in tariff defaults to 0, hardware priced at retail with no STCs or rebates. Payback therefore depends mostly on self-consumption.
-- Preset prices/specs are provisional placeholders that must be verified before release, so don't treat them as ground truth. Yield values are PVGIS-ERA5 averages, not yet spot checked against BoM or CEC.
+- Preset prices/specs are provisional placeholders that must be verified before release, so don't treat them as ground truth. Yield values are PVGIS-ERA5 averages. The flat column agrees with BoM within about 6% a year (`docs/METHOD.md`).
 - The tests assert plausibility ranges and relative orderings (for example, out-during-day saves less than home-all-day, and a battery increases saving) plus a load energy balance (`load ≈ selfConsumed + fromBattery + imported`). Changes to the method should keep these holding.

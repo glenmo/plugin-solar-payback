@@ -80,8 +80,34 @@ const sot = run('Melbourne solar only, TOU, out during day', {
 assert(sbt.annual.savingDollars > sot.annual.savingDollars + bo.annual.savingDollars * 0.5, 'battery should add value on top of solar on TOU');
 assert(sbt.annual.exported < sot.annual.exported * 0.2, 'battery should soak up most PV surplus');
 
+// 5c. VDO TOU: off-peak is a midday solar soak (11 to 4), not overnight
+const vdo = presets.tariffs.tou_vdo;
+const bov = run('Battery only, VDO TOU (solar soak charging)', {
+  ...presets.kits.battery_only_2kwh,
+  tariff: vdo,
+  loadProfile: presets.occupancy.out_during_day,
+});
+assert(bov.annual.gridCharged > 0, 'battery should grid charge in the solar soak');
+assert(Math.abs(bov.annual.fromBattery - bov.annual.gridCharged * boKit.roundTripEff) < 1, 'VDO round trip losses off');
+const bovValue = (bov.annual.savingDollars * 100 + bov.annual.gridCharged * vdo.offPeak) / bov.annual.fromBattery;
+assert(bovValue > vdo.peak * 0.98, `VDO battery output worth ${bovValue.toFixed(1)} c/kWh, should be near the ${vdo.peak} c peak rate`);
+// The solar soak is when PV runs, so grid charging must leave room for it rather than export it.
+const sbv = run('Melbourne solar plus 2 kWh battery, VDO TOU, out during day', {
+  ...presets.kits.solar_battery_2kwh,
+  tariff: vdo,
+  loadProfile: presets.occupancy.out_during_day,
+});
+const sov = run('Melbourne solar only, VDO TOU, out during day', {
+  ...presets.kits.solar_only_800,
+  tariff: vdo,
+  loadProfile: presets.occupancy.out_during_day,
+});
+assert(sbv.annual.exported < sov.annual.exported * 0.2, 'grid charging should not crowd out PV in the solar soak');
+assert(sbv.annual.gridCharged < bov.annual.gridCharged * 0.5, 'PV should replace most solar soak grid charging');
+assert(sbv.annual.savingDollars > sov.annual.savingDollars, 'battery should add value on VDO TOU');
+
 // 6. Energy balance: load = direct + battery + import for each run
-for (const r of [base, out, bat, hob, bo, sbt, sot]) {
+for (const r of [base, out, bat, hob, bo, sbt, sot, bov, sbv, sov]) {
   const a = r.annual;
   const lhs = a.load;
   const rhs = a.selfConsumed + a.fromBattery + a.imported;

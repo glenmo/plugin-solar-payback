@@ -71,18 +71,24 @@
       setNum('roundTripEff', Math.round(k.battery.roundTripEff * 100));
       $('gridCharge').checked = !!k.battery.gridCharge;
     }
-    // Battery only kits only make sense on time of use. Switch to it, and switch
-    // back when leaving the kit unless the tariff was changed in the meantime.
+    // Battery only kits only make sense on time of use. Switch to it (the VDO one in
+    // Melbourne), and switch back when leaving the kit unless the tariff was changed
+    // in the meantime.
     if (k.panelWatts === 0 && $('tariff').value === 'default_offer') {
       tariffBeforeBatteryOnly = 'default_offer';
-      $('tariff').value = 'tou_vic';
-      applyTariff('tou_vic');
+      $('tariff').value = cityTou();
+      applyTariff(cityTou());
     } else if (k.panelWatts > 0 && tariffBeforeBatteryOnly) {
       $('tariff').value = tariffBeforeBatteryOnly; // its rate field still holds the earlier value
       tariffBeforeBatteryOnly = null;
       syncTariffFields();
     }
     syncBatteryFields();
+  }
+
+  // The TOU preset a battery-only kit switches to: the real VDO one in Melbourne.
+  function cityTou() {
+    return $('city').value === 'melbourne' ? 'tou_vdo' : 'tou_vic';
   }
 
   function applyOccupancy(key) {
@@ -121,8 +127,10 @@
   }
 
   function syncTariffFields() {
-    const tou = presets.tariffs[$('tariff').value].type === 'tou';
+    const t = presets.tariffs[$('tariff').value];
+    const tou = t.type === 'tou';
     document.querySelector('.tou-only').hidden = !tou;
+    $('touWindows').textContent = tou ? t.windows : '';
     document.querySelector('.flat-only').hidden = tou;
     $('flatSource').hidden = $('tariff').value !== 'default_offer';
   }
@@ -495,6 +503,8 @@
     // to TOU, the flat field still updates so the rate is right when switching back.
     $('city').addEventListener('change', () => {
       if ($('tariff').value === 'default_offer' || tariffBeforeBatteryOnly === 'default_offer') { applyDefaultOffer(); syncTariffFields(); }
+      // A TOU the battery-only kit picked follows the city too.
+      if (tariffBeforeBatteryOnly && $('tariff').value !== cityTou()) { $('tariff').value = cityTou(); applyTariff(cityTou()); }
     });
     $('tariff').addEventListener('change', (e) => { tariffBeforeBatteryOnly = null; applyTariff(e.target.value); render(); });
     $('hasBattery').addEventListener('change', toggleBattery);

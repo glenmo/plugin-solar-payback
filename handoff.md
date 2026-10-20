@@ -25,6 +25,7 @@ State of the plug-in solar payback calculator as of 2026-10-20, for continuing i
 - Fixed the tariff staying on TOU after leaving the battery-only kit. Picking that kit on the flat tariff switches to TOU, because arbitrage needs it. Leaving it, by checkbox or dropdown, used to leave TOU on, so solar-only payback showed 3.1 years instead of 2.9. It now switches back to flat and keeps any custom flat rate, unless you changed the tariff in between (`tariffBeforeBatteryOnly` in `src/app.js`).
 - Footer entity "Smart Energy Lab Services Pty Ltd" confirmed correct by Glen (2026-10-20).
 - Added an Auto / Light / Dark theme control in the header. The choice is saved in `localStorage` (`theme`, absent for auto), and an inline script in `<head>` applies it before first paint.
+- Replaced the fixed 32 c/kWh flat tariff with each city's 2026–27 default offer (PR #13, deployed 2026-10-20). `presets.defaultOffers` holds one rate per city for the network covering the CBD: the VDO in Melbourne, the DMO in Sydney, Brisbane and Adelaide, and the regulated tariff elsewhere. The tariff option is now `default_offer`. The source shows under the rate field, and changing city resets the rate. Melbourne default payback went from 2.9 to 3.5 years. Rates and sources are in `docs/METHOD.md`. `engine.defaults` still uses 32c, so test results didn't change.
 
 ## Live: Apache vhost
 
@@ -66,8 +67,13 @@ The server hosts many unrelated sites, so always run `configtest` before a reloa
 ## Not done yet
 
 - Kit prices in `src/presets.js` stay provisional. Checked 2026-10-20: plug-in systems aren't yet legal to connect in Australia, so there's no local retail market. The one AU listing (Sunplug, 960 W + 800 W micro, A$1,398 preorder) supports the $1,200 solar kit. German prices suggest the battery kits ($2,400 and $1,500) are high. Revisit once AU pricing exists.
+- Verify the default offer rates before promoting the calculator. Sydney (Ausgrid 33.14), Brisbane (Energex 27.97) and Adelaide (SAPN 41.91) come from comparison sites, because the DMO caps the annual bill rather than setting a usage rate. Each adds up to the AER's final annual DMO price to within $1, but none was checked against the AER determination, because aer.gov.au downloads kept timing out from burgan. Perth (Synergy A1 33.26) is also from secondary sources. Melbourne, Hobart, Canberra and Darwin come from the regulator's or retailer's own documents.
+- Hobart uses Aurora tariff 31, which is closed to new connections. Consider the tariff new customers get instead.
+- The TOU preset (`tou_vic`, 40/28/20) is still an example. The real Victorian default offer TOU (CitiPower: 38.31 peak 4–9 pm, 16.59 solar soak 11 am–4 pm, 21.17 otherwise) needs `rateForHour` in `src/engine.js` to support an off-peak window that doesn't wrap midnight. It currently assumes off-peak spans midnight.
+- Switching city with the default offer tariff hasn't been checked in a browser. Only the default Melbourne view was checked, in headless Chromium.
 - The page has a "Not yet legal in Australia" notice under the header (`.notice` in `index.html`). Update or remove it when the rules change.
 
 ## Notes
 
 - SSH from the dev Mac to burgan timed out for a while after several quick connections (possibly fail2ban). Avoid hammering port 22.
+- Port 8765 on burgan is taken by another app (it returns FastAPI `{"detail":"Not Found"}`). To preview locally, serve on a free port bound to 127.0.0.1.

@@ -4,7 +4,7 @@ State of the plug-in solar payback calculator as of 2026-10-20, for continuing i
 
 ## Where things are
 
-- **Code:** `main` on `github.com/glenmo/plugin-solar-payback` (public). Everything is merged (PRs #1 to #9) and only `main` remains.
+- **Code:** `main` on `github.com/glenmo/plugin-solar-payback` (public). All PRs are merged and only `main` remains.
 - **Checkout on burgan:** `~/plugin-solar-payback`, on `main`.
 - **Deployed files:** `/var/www/payback/` (owned by `glen`), copied from the checkout with:
   ```bash
@@ -21,7 +21,8 @@ State of the plug-in solar payback calculator as of 2026-10-20, for continuing i
 - Checked in headless Chrome at desktop and 390 px width, in light and dark.
 - Fixed TOU battery dispatch: the battery used to spend its overnight charge in the morning shoulder and was empty by the 3 pm peak. It now keeps a peak reserve. Battery only on TOU went from $29/yr (never pays back) to $105/yr (12.3 years). Tests now check that battery output is worth the peak rate, and that PV still refills the battery on TOU.
 - Replaced the yield table with PVGIS-ERA5 values and spot checked the flat column against BoM solar exposure for all 8 cities. Annual totals are within -3.7% to +5.5%, and the worst month is 10.8% off (results in `docs/METHOD.md`). Tilted and vertical have no BoM equivalent.
-- Fixed the battery checkbox: ticking "Include a plug-in battery" on the solar-only kit used to keep the $1,200 cost, so the battery was modelled for free. It now switches to the matching solar kit (`toggleBattery()` in `src/app.js`), which sets the cost and battery fields. Unticking on battery only goes to solar only. Toggling resets panel watts and cost to the preset, like picking a kit. Picking the battery-only kit on the flat tariff switches to TOU. Leaving that kit, by checkbox or dropdown, switches back to flat and keeps any custom flat rate, unless the tariff was changed in between (`tariffBeforeBatteryOnly` in `src/app.js`).
+- Fixed the battery checkbox: ticking "Include a plug-in battery" on the solar-only kit used to keep the $1,200 cost, so the battery was modelled for free. It now switches to the matching solar kit (`toggleBattery()` in `src/app.js`), which sets the cost and battery fields. Unticking on battery only goes to solar only. Toggling resets panel watts and cost to the preset, like picking a kit.
+- Fixed the tariff staying on TOU after leaving the battery-only kit. Picking that kit on the flat tariff switches to TOU, because arbitrage needs it. Leaving it, by checkbox or dropdown, used to leave TOU on, so solar-only payback showed 3.1 years instead of 2.9. It now switches back to flat and keeps any custom flat rate, unless you changed the tariff in between (`tariffBeforeBatteryOnly` in `src/app.js`).
 - Footer entity "Smart Energy Lab Services Pty Ltd" confirmed correct by Glen (2026-10-20).
 - Added an Auto / Light / Dark theme control in the header. The choice is saved in `localStorage` (`theme`, absent for auto), and an inline script in `<head>` applies it before first paint.
 

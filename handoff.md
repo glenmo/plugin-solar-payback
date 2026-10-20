@@ -61,7 +61,8 @@ The server hosts many unrelated sites, so always run `configtest` before a reloa
 
 ## Not done yet
 
-- Check kit prices in `src/presets.js` against current retail listings. They are marked provisional, and the page says so.
+- Kit prices in `src/presets.js` stay provisional. Checked 2026-10-20: plug-in systems aren't yet legal to connect in Australia, so there's no local retail market. The one AU listing (Sunplug, 960 W + 800 W micro, A$1,398 preorder) supports the $1,200 solar kit. German prices suggest the battery kits ($2,400 and $1,500) are high. Revisit once AU pricing exists.
+- The page has a "Not yet legal in Australia" notice under the header (`.notice` in `index.html`). Update or remove it when the rules change.
 - Optionally spot check a few cities in `data/yield.json` against BoM or CEC figures. The values are PVGIS-ERA5 averages (see `docs/METHOD.md`).
 - Confirm the footer entity, "Smart Energy Lab Services Pty Ltd".
 

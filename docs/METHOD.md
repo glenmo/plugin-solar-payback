@@ -64,9 +64,10 @@ determination before release.
 Suburbs on other networks pay different rates (for example 27.35 to 31.98 c in other
 Melbourne zones), so the rate stays editable. Changing city resets it to that city's offer.
 
-TOU presets. The battery-only kit switches to the city's own (`presets.touByCity`) and to
-the example elsewhere. Where a tariff's cheapest period is a midday solar soak, that is
-the engine's `offPeak` and the tariff's own "off-peak" is the engine's `shoulder`.
+TOU presets. Every city has its own, which the battery-only kit switches to
+(`presets.touByCity`). Where a tariff's cheapest period is midday, that is the engine's
+`offPeak` and the tariff's own "off-peak" is the engine's `shoulder`. A two-period tariff
+sets its unused period to the same rate as the period it falls into.
 
 | Preset | Peak | Shoulder | Off-peak | Source |
 |---|---|---|---|---|
@@ -74,7 +75,11 @@ the engine's `offPeak` and the tariff's own "off-peak" is the engine's `shoulder
 | `tou_ausgrid` Sydney, DMO | 60.20 c, 3 pm to 9 pm, Nov to Mar and Jun to Aug | none (set to off-peak) | 24.04 c, other times, and all day in Apr, May, Sep, Oct | Secondary sources (b) |
 | `tou_energex` Brisbane, DMO | 47.79 c, 4 pm to 9 pm | 25.30 c, 9 pm to 11 am | 6.98 c, 11 am to 4 pm | Secondary sources (b) |
 | `tou_sapn` Adelaide, DMO | 56.22 c, 6 am to 10 am and 4 pm to midnight | 32.55 c overnight, midnight to 6 am | 17.04 c solar sponge, 10 am to 4 pm | Secondary sources (b) |
-| `tou_vic` example | 40 c, 3 pm to 9 pm | 28 c | 20 c, 10 pm to 7 am | Example only |
+| `tou_synergy` Perth, Synergy Midday Saver | 55.33 c, 3 pm to 9 pm | 24.34 c overnight, 9 pm to 9 am | 8.85 c super off-peak, 9 am to 3 pm | Secondary sources (c) |
+| `tou_aurora` Hobart, Aurora tariff 93 | 36.19 c, 7 am to 10 am and 4 pm to 9 pm, weekdays only | none | 17.02 c, other times and all weekend | OTTER 2026–27 standing offer schedule, 2.6 |
+| `tou_actewagl` Canberra, ActewAGL Home TOU | 49.72 c, 7 am to 9 am and 5 pm to 8 pm | 33.57 c, 9 am to 5 pm and 8 pm to 10 pm | 29.92 c, 10 pm to 7 am | ActewAGL ACT Standard plan prices from 1 July 2026 |
+| `tou_jacana` Darwin, Jacana TOU | 33.22 c, 3 pm to 9 am | none | 25.83 c, 9 am to 3 pm | Jacana Energy pricing page, from 1 July 2026 |
+| `tou_vic` example | 40 c, 3 pm to 9 pm | 28 c | 20 c, 10 pm to 7 am | Example only, kept in the list |
 
 (b) Taken from wattmaths.com.au, which cites Appendix C of the AER final determination for
 the Ausgrid off-peak rate but gives no document for the others. HomeBillLab and EcoFlow
@@ -85,10 +90,22 @@ because that needs the AER's assumed usage split. Sources disagree on Ausgrid's 
 season and on SAPN's rates (another site gives 58.84 / 35.17 c). Check all three against
 the AER final determination before release.
 
+(c) talkenergy.com.au and perthsolarwarehouse.com.au, quoting Synergy's 1 July 2026
+brochure. They agree to four decimal places (55.3253, 24.3431, 8.8520). Not checked
+against synergy.net.au.
+
+ActewAGL gives its times in Australian Eastern Standard Time, so in daylight saving its
+windows run an hour later on the clock. The engine ignores this. Darwin's TOU barely
+pays for a battery: the midday rate is only 7 c below the rest of the day, which round
+trip losses mostly eat.
+
 Windows can wrap midnight (22 to 7) or sit inside the day (11 to 16), and a tariff can
 list several (`peakWindows`, `offPeakWindows`). With `peakMonths`, peak hours outside
 those months are off-peak. A day with no peak hours has nothing to shift energy into, so
 the battery then works as on a flat tariff: no holding, no reserve, no grid charging.
+With `peakWeekdaysOnly` (Aurora), each month also runs a weekend day with no peak, and
+the year is weighted 5 weekdays to 2 weekend days. Each day type settles its own battery
+state, so charge carried from Friday into the weekend isn't modelled.
 
 ## Dispatch, each hour
 1. PV meets load directly

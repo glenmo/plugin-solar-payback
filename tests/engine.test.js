@@ -106,10 +106,10 @@ assert(sbv.annual.exported < sov.annual.exported * 0.2, 'grid charging should no
 assert(sbv.annual.gridCharged < bov.annual.gridCharged * 0.5, 'PV should replace most solar soak grid charging');
 assert(sbv.annual.savingDollars > sov.annual.savingDollars, 'battery should add value on VDO TOU');
 
-// 5d. DMO TOU in Sydney, Brisbane and Adelaide: battery only should arbitrage into the peak,
-//     and solar plus battery should beat solar only
+// 5d. Each city's own TOU (DMO, Synergy, Aurora, ActewAGL, Jacana): battery only should
+//     arbitrage into the peak, and solar plus battery should beat solar only
 const dmoRuns = [];
-for (const [city, key] of [['sydney', 'tou_ausgrid'], ['brisbane', 'tou_energex'], ['adelaide', 'tou_sapn']]) {
+for (const [city, key] of Object.entries(presets.touByCity).filter(([c]) => c !== 'melbourne')) {
   const t = presets.tariffs[key];
   const b = run(`Battery only, ${t.name}`, {
     ...presets.kits.battery_only_2kwh, city, tariff: t, loadProfile: presets.occupancy.out_during_day,
@@ -139,6 +139,17 @@ const sydApr = engine.hourlyGeneration({ ...engine.defaults, city: 'sydney' }, y
 const aprSb = engine.dispatchDay(sydApr, flatLoad, presets.kits.solar_battery_2kwh.battery, aus, 0, 3);
 assert(aprSb.fromBattery > 0.5, 'stored PV should be used in a month without a peak');
 assert(aprSb.netSavingDollars * 100 > (aprSb.selfConsumed + aprSb.fromBattery) * aus.offPeak * 0.99, 'April should be valued at the off-peak rate');
+
+// 5f. Aurora's peak is weekdays only. A weekend day has no peak, so battery only does nothing,
+//     and the year is weighted 5 weekdays to 2 weekend days.
+const aur = presets.tariffs.tou_aurora;
+const wkend = engine.dispatchDay(new Array(24).fill(0), flatLoad, boKit, aur, 0, 6, true);
+const wkday = engine.dispatchDay(new Array(24).fill(0), flatLoad, boKit, aur, 0, 6, false);
+assert(wkend.gridCharged === 0 && wkend.fromBattery === 0, 'no arbitrage on a weekend without a peak');
+assert(wkday.fromBattery > 0.5, 'weekday should arbitrage into the peak');
+const hobBo = engine.calculate({ ...engine.defaults, ...presets.kits.battery_only_2kwh, city: 'hobart', tariff: aur, loadProfile: presets.occupancy.out_during_day }, yieldTable);
+const wkdaySaving = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].reduce((t, m) => t + engine.dispatchDay(new Array(24).fill(0), flatLoad, boKit, aur, 0, m, false).netSavingDollars * [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][m], 0);
+assert(Math.abs(hobBo.annual.savingDollars - wkdaySaving * 5 / 7) < 0.5, 'weekday-only peak should count 5 days in 7');
 
 // 6. Energy balance: load = direct + battery + import for each run
 for (const r of [base, out, bat, hob, bo, sbt, sot, bov, sbv, sov, ...dmoRuns]) {

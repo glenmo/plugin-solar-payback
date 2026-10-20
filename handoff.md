@@ -4,8 +4,8 @@ State of the plug-in solar payback calculator as of 2026-10-20, for continuing i
 
 ## Where things are
 
-- **Code:** branch `ui` on `github.com/glenmo/plugin-solar-payback` (public), PR open against `main`, not merged yet.
-- **Checkout on burgan:** `~/plugin-solar-payback` (cloned from `ui`).
+- **Code:** `main` on `github.com/glenmo/plugin-solar-payback` (public). The UI (PR #1) and the theme control (PR #2) are merged, and their branches are deleted.
+- **Checkout on burgan:** `~/plugin-solar-payback`, on `main`.
 - **Deployed files:** `/var/www/payback/` (owned by `glen`), copied from the checkout with:
   ```bash
   cd ~/plugin-solar-payback && git pull && rsync -av --delete index.html src data /var/www/payback/ && chmod -R a+rX /var/www/payback
@@ -60,7 +60,6 @@ The server hosts many unrelated sites, so always run `configtest` before a reloa
 
 ## Not done yet
 
-- Merge the PR from `ui` to `main`.
 - Check the yield table (`data/yield.json`) against CEC tables or PVGIS, and kit prices in `src/presets.js` against current retail listings. Both are marked provisional, and the page says so.
 - Battery-only TOU scenario: the test only asserts saving > 0, but the 15-year net is about −$988, so it never pays back. Consider a stronger check, or review the preset price.
 - Confirm the footer entity, "Smart Energy Lab Services Pty Ltd".

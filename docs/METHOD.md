@@ -14,6 +14,27 @@ mountings face north: `tilted` is sloped at the city's latitude, `flat` is horiz
 `aspect=180` (PVGIS counts 0 as south), `horirrad=1` for flat and `selectrad=1` with
 `angle` for the others, then divide each month's total by its days and average the years.
 
+### Check against BoM (2026-10-20)
+The `flat` column was compared with BoM mean daily solar exposure (horizontal,
+satellite-derived) from the extended climate statistics table for one station per city
+(`https://www.bom.gov.au/climate/averages/tables/cw_<site>_All.shtml`, MJ/m2 divided by
+3.6). BoM has no tilted-surface data, so `tilted` and `vertical` rest on PVGIS's
+transposition alone.
+
+| City | BoM site | Years | BoM kWh/m2/yr | Table | Diff | Worst month |
+|---|---|---|---|---|---|---|
+| Melbourne | 086338 Olympic Park | 1990-2026 | 1527 | 1586 | +3.9% | Sep +6.7% |
+| Sydney | 066062 Observatory Hill | 1990-2026 | 1654 | 1715 | +3.7% | Nov +6.7% |
+| Brisbane | 040913 Brisbane | 1990-2026 | 1877 | 1807 | -3.7% | Jun -9.2% |
+| Adelaide | 023090 Kent Town | 1990-2026 | 1763 | 1808 | +2.5% | Sep +5.5% |
+| Perth | 009225 Perth Metro | 1990-2026 | 1953 | 1966 | +0.7% | Jul -8.2% |
+| Hobart | 094029 Ellerslie Road | 2007-2026 | 1351 | 1425 | +5.5% | Apr +10.8% |
+| Canberra | 070351 Airport | 2007-2026 | 1703 | 1724 | +1.3% | Jun -7.8% |
+| Darwin | 014015 Airport | 1990-2026 | 2175 | 2140 | -1.6% | Jun -5.5% |
+
+PVGIS-ERA5 runs 1 to 6% above BoM in the southern cities and 2 to 4% below in Brisbane and
+Darwin. That is small next to the other uncertainties, so the table was left as is.
+
 ## Load
 A four part profile: baseload (24 h), morning bump (6 to 9), daytime (9 to 17), evening
 (17 to 22). Occupancy presets set these.
@@ -41,5 +62,5 @@ interpolated within the year it turns positive. No discounting in the default vi
 - Battery losses applied symmetrically on charge and discharge
 - No standby draw for the inverter or battery electronics
 - No daily supply charge changes (plug-in does not change them)
-- Yield values come from ERA5 reanalysis rather than ground or satellite measurement, and
-  have not yet been spot checked against BoM or CEC figures
+- Yield values come from ERA5 reanalysis. Horizontal values agree with BoM within about
+  6% a year (see above). Tilted and vertical values have no independent check

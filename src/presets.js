@@ -31,11 +31,25 @@ const occupancy = {
   shift_worker: { name: 'Shift worker, home daytime, out evenings', baseload: 250, morning: 300, day: 500, evening: 300 },
 };
 
+// Default (reference) flat usage rate per city, c/kWh including GST, 1 July 2026 to 30 June 2027.
+// Each city uses the network that covers its CBD. Supply charges are left out because
+// plug-in solar doesn't change them.
+const defaultOffers = {
+  melbourne: { flat: 25.96, source: 'Victorian Default Offer 2026–27, CitiPower' },
+  sydney: { flat: 33.14, source: 'Default Market Offer 2026–27, Ausgrid' },
+  brisbane: { flat: 27.97, source: 'Default Market Offer 2026–27, Energex' },
+  adelaide: { flat: 41.91, source: 'Default Market Offer 2026–27, SA Power Networks' },
+  perth: { flat: 33.26, source: 'Synergy A1 regulated tariff 2026–27' },
+  hobart: { flat: 27.95, source: 'Aurora Energy tariff 31 regulated price 2026–27' },
+  canberra: { flat: 36.95, source: 'ActewAGL standing offer (Home) 2026–27' },
+  darwin: { flat: 31.68, source: 'Jacana Energy regulated residential tariff 2026–27' },
+};
+
 const tariffs = {
-  flat_32: { name: 'Flat 32 c/kWh', type: 'flat', flat: 32 },
+  default_offer: { name: 'Default offer for your city (flat)', type: 'flat', flat: 32 },
   tou_vic: { name: 'Time of use (example)', type: 'tou', peak: 40, shoulder: 28, offPeak: 20, peakStart: 15, peakEnd: 21, offPeakStart: 22, offPeakEnd: 7 },
 };
 
-const presetsApi = { kits, occupancy, tariffs };
+const presetsApi = { kits, occupancy, tariffs, defaultOffers };
 if (typeof module !== 'undefined') module.exports = presetsApi;
 if (typeof window !== 'undefined') window.PaybackPresets = presetsApi;

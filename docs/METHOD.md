@@ -39,6 +39,32 @@ Darwin. That is small next to the other uncertainties, so the table was left as 
 A four part profile: baseload (24 h), morning bump (6 to 9), daytime (9 to 17), evening
 (17 to 22). Occupancy presets set these.
 
+## Tariff
+The default tariff is a flat rate set from each city's default (reference) offer for
+2026–27, c/kWh including GST, for the network that covers the CBD. These are
+`presets.defaultOffers`:
+
+| City | c/kWh | Offer | Source |
+|---|---|---|---|
+| Melbourne | 25.96 | Victorian Default Offer, CitiPower | ESC VDO 2026–27 Price Determination, Schedule 1 |
+| Sydney | 33.14 | Default Market Offer, Ausgrid | Secondary sources (a) |
+| Brisbane | 27.97 | Default Market Offer, Energex | Secondary sources (a) |
+| Adelaide | 41.91 | Default Market Offer, SA Power Networks | Secondary sources (a) |
+| Perth | 33.26 | Synergy A1, regulated | Secondary sources quoting Synergy's 1 July 2026 brochure |
+| Hobart | 27.95 | Aurora tariff 31, regulated | OTTER 2026–27 standing offer schedule |
+| Canberra | 36.95 | ActewAGL Home, standing offer | ActewAGL ACT Standard plan prices from 1 July 2026 |
+| Darwin | 31.68 | Jacana residential, regulated | Jacana Energy pricing page |
+
+(a) The DMO is an annual bill cap, not a usage rate. These rates were taken from comparison
+sites, then checked against the AER's final annual DMO prices: supply plus rate times the
+reference usage gives Ausgrid $1,898 (DMO $1,899 at 3,900 kWh), Energex $1,987 ($1,988 at
+4,600 kWh) and SAPN $2,333 ($2,334 at 4,000 kWh). Check them against the AER final
+determination before release.
+
+Suburbs on other networks pay different rates (for example 27.35 to 31.98 c in other
+Melbourne zones), so the rate stays editable. Changing city resets it to that city's offer.
+The TOU preset is still an example, not a regulated offer.
+
 ## Dispatch, each hour
 1. PV meets load directly
 2. Surplus PV charges the battery (charge rate and capacity limited)

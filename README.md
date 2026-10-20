@@ -23,6 +23,7 @@ for itself, and what does it save per year.
 
 ```
 index.html          single page app (inputs, results, charts)
+src/app.js          UI: reads the form, runs the engine, draws SVG charts
 src/engine.js       calculation engine, no DOM dependencies
 src/presets.js      kit presets (EcoFlow STREAM etc) and occupancy profiles
 data/yield.json     monthly peak sun hours by capital city and tilt
@@ -36,11 +37,14 @@ docs/METHOD.md      calculation method and assumptions
 node tests/engine.test.js
 ```
 
-No build step. Open `index.html` in a browser or serve the folder with any static host.
+No build step. Serve the folder with any static host (for example
+`python3 -m http.server`). Opening `index.html` straight from disk does not work
+because the page fetches `data/yield.json`.
 
 ## Status
 
-Phase 1: engine and test harness. UI not started.
+Phase 2: engine, test harness and UI built. Yield table and kit prices are still
+provisional.
 
 ## Licence
 

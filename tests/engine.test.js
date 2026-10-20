@@ -106,8 +106,42 @@ assert(sbv.annual.exported < sov.annual.exported * 0.2, 'grid charging should no
 assert(sbv.annual.gridCharged < bov.annual.gridCharged * 0.5, 'PV should replace most solar soak grid charging');
 assert(sbv.annual.savingDollars > sov.annual.savingDollars, 'battery should add value on VDO TOU');
 
+// 5d. DMO TOU in Sydney, Brisbane and Adelaide: battery only should arbitrage into the peak,
+//     and solar plus battery should beat solar only
+const dmoRuns = [];
+for (const [city, key] of [['sydney', 'tou_ausgrid'], ['brisbane', 'tou_energex'], ['adelaide', 'tou_sapn']]) {
+  const t = presets.tariffs[key];
+  const b = run(`Battery only, ${t.name}`, {
+    ...presets.kits.battery_only_2kwh, city, tariff: t, loadProfile: presets.occupancy.out_during_day,
+  });
+  const v = (b.annual.savingDollars * 100 + b.annual.gridCharged * t.offPeak) / b.annual.fromBattery;
+  assert(Math.abs(b.annual.fromBattery - b.annual.gridCharged * boKit.roundTripEff) < 1, `${key} round trip losses off`);
+  assert(v > t.peak * 0.98, `${key} battery output worth ${v.toFixed(1)} c/kWh, should be near the ${t.peak} c peak rate`);
+  const sb = run(`${city} solar plus 2 kWh battery, ${t.name}, out during day`, {
+    ...presets.kits.solar_battery_2kwh, city, tariff: t, loadProfile: presets.occupancy.out_during_day,
+  });
+  const so = run(`${city} solar only, ${t.name}, out during day`, {
+    ...presets.kits.solar_only_800, city, tariff: t, loadProfile: presets.occupancy.out_during_day,
+  });
+  assert(sb.annual.savingDollars > so.annual.savingDollars, `battery should add value on ${key}`);
+  assert(sb.annual.exported < so.annual.exported * 0.2, `battery should soak up most PV surplus on ${key}`);
+  dmoRuns.push(b, sb, so);
+}
+
+// 5e. Ausgrid's peak only applies in some months. In April there's no peak, so a battery
+//     only kit should neither grid charge nor discharge, and solar plus battery should
+//     still use its stored PV at the off-peak rate rather than hold it.
+const aus = presets.tariffs.tou_ausgrid;
+const flatLoad = engine.hourlyLoad(presets.occupancy.out_during_day);
+const aprBo = engine.dispatchDay(new Array(24).fill(0), flatLoad, boKit, aus, 0, 3);
+assert(aprBo.gridCharged === 0 && aprBo.fromBattery === 0, 'no arbitrage in a month without a peak');
+const sydApr = engine.hourlyGeneration({ ...engine.defaults, city: 'sydney' }, yieldTable, 3);
+const aprSb = engine.dispatchDay(sydApr, flatLoad, presets.kits.solar_battery_2kwh.battery, aus, 0, 3);
+assert(aprSb.fromBattery > 0.5, 'stored PV should be used in a month without a peak');
+assert(aprSb.netSavingDollars * 100 > (aprSb.selfConsumed + aprSb.fromBattery) * aus.offPeak * 0.99, 'April should be valued at the off-peak rate');
+
 // 6. Energy balance: load = direct + battery + import for each run
-for (const r of [base, out, bat, hob, bo, sbt, sot, bov, sbv, sov]) {
+for (const r of [base, out, bat, hob, bo, sbt, sot, bov, sbv, sov, ...dmoRuns]) {
   const a = r.annual;
   const lhs = a.load;
   const rhs = a.selfConsumed + a.fromBattery + a.imported;

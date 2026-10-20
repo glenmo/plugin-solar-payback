@@ -3,12 +3,307 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Plug-in Solar and Battery Payback Calculator</title>
+<title>Plug-in Solar Payback</title>
+<meta name="description" content="How many years until a plug-in (balcony or backyard) solar system or plug-in battery pays for itself in Australia.">
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --text: #0b0b0b;
+  --text-2: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11,11,11,0.10);
+  --accent: #2a78d6;
+  --gen: #2a78d6;      /* categorical slot 1 */
+  --load: #eb6834;     /* categorical slot 2 */
+  --pos: #2a78d6;      /* diverging cool pole */
+  --neg: #e34948;      /* diverging warm pole */
+  --good-text: #006300;
+  --input-bg: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --text: #f0efec;
+    --text-2: #c3c2b7;
+    --muted: #898781;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --border: rgba(255,255,255,0.10);
+    --accent: #3987e5;
+    --gen: #3987e5;
+    --load: #d95926;
+    --pos: #3987e5;
+    --neg: #e66767;
+    --good-text: #0ca30c;
+    --input-bg: #222220;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d;
+  --surface: #1a1a19;
+  --text: #f0efec;
+  --text-2: #c3c2b7;
+  --muted: #898781;
+  --grid: #2c2c2a;
+  --axis: #383835;
+  --border: rgba(255,255,255,0.10);
+  --accent: #3987e5;
+  --gen: #3987e5;
+  --load: #d95926;
+  --pos: #3987e5;
+  --neg: #e66767;
+  --good-text: #0ca30c;
+  --input-bg: #222220;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--text);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+.wrap { max-width: 1160px; margin: 0 auto; padding: 24px 16px 48px; }
+header h1 { font-size: 26px; line-height: 1.2; margin: 0 0 6px; letter-spacing: -0.01em; }
+header p { margin: 0; color: var(--text-2); max-width: 70ch; }
+
+.layout { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 20px; margin-top: 24px; align-items: start; }
+@media (max-width: 860px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+.card + .card { margin-top: 16px; }
+.card h2 { font-size: 15px; margin: 0 0 12px; }
+.card h3 { font-size: 13px; margin: 18px 0 8px; color: var(--text-2); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.card h3:first-of-type { margin-top: 0; }
+
+form label { display: block; font-size: 13px; color: var(--text-2); margin-bottom: 10px; }
+form label > span.hint { display: block; color: var(--muted); font-size: 12px; }
+input[type=number], select {
+  display: block; width: 100%; margin-top: 4px;
+  font: inherit; font-size: 15px; color: var(--text);
+  background: var(--input-bg); border: 1px solid var(--border); border-radius: 8px;
+  padding: 7px 9px; min-height: 38px;
+}
+input[type=number] { font-variant-numeric: tabular-nums; }
+input:focus-visible, select:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+.check { display: flex; gap: 8px; align-items: center; color: var(--text); font-size: 14px; }
+.check input { width: 18px; height: 18px; margin: 0; accent-color: var(--accent); }
+fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+fieldset[disabled] { opacity: 0.45; }
+[hidden] { display: none !important; }
+details.adv summary { cursor: pointer; font-size: 13px; color: var(--text-2); margin: 6px 0 10px; }
+
+.hero { display: flex; flex-wrap: wrap; gap: 16px 32px; align-items: flex-end; }
+.hero-label { font-size: 13px; color: var(--text-2); }
+.hero-value { font-size: 52px; line-height: 1; font-weight: 650; letter-spacing: -0.02em; margin-top: 6px; }
+.hero-value small { font-size: 20px; font-weight: 500; color: var(--text-2); margin-left: 4px; letter-spacing: 0; }
+.hero-note { color: var(--text-2); font-size: 14px; max-width: 46ch; }
+
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 18px; }
+@media (max-width: 560px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.tile { border-top: 1px solid var(--grid); padding-top: 10px; }
+.tile .l { font-size: 12px; color: var(--text-2); }
+.tile .v { font-size: 22px; font-weight: 600; margin-top: 2px; }
+.tile .s { font-size: 12px; color: var(--muted); }
+
+.chart-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 16px; margin-bottom: 8px; }
+.chart-head h2 { margin: 0; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--text-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.key-line { width: 14px; height: 2px; border-radius: 1px; display: inline-block; }
+.key-rect { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.seg button { font: inherit; font-size: 13px; padding: 5px 12px; border: 0; background: transparent; color: var(--text-2); cursor: pointer; min-height: 32px; }
+.seg button[aria-pressed="true"] { background: var(--text); color: var(--surface); }
+
+.chart { position: relative; width: 100%; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart text { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.tip {
+  position: absolute; pointer-events: none; z-index: 2;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12); padding: 8px 10px; font-size: 12px; min-width: 130px;
+  white-space: nowrap;
+}
+.tip[hidden] { display: none; }
+.tip .t { color: var(--text-2); margin-bottom: 4px; }
+.tip .r { display: flex; align-items: center; gap: 6px; }
+.tip .r b { font-weight: 600; color: var(--text); min-width: 52px; }
+.tip .r em { font-style: normal; color: var(--text-2); }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+th, td { text-align: right; padding: 5px 8px; border-bottom: 1px solid var(--grid); }
+th:first-child, td:first-child { text-align: left; }
+th { color: var(--text-2); font-weight: 600; }
+details.table summary { cursor: pointer; font-size: 13px; color: var(--text-2); margin-top: 12px; }
+.table-scroll { overflow-x: auto; margin-top: 8px; }
+
+.energy dl { display: grid; grid-template-columns: 1fr auto; gap: 6px 16px; margin: 0; font-size: 14px; }
+.energy dt { color: var(--text-2); }
+.energy dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+
+.notes { color: var(--text-2); font-size: 13px; }
+.notes ul { padding-left: 18px; margin: 8px 0 0; }
+.error { color: var(--neg); }
+footer { margin-top: 32px; color: var(--muted); font-size: 12px; }
+</style>
 </head>
 <body>
-<h1>Plug-in Solar and Battery Payback Calculator</h1>
-<p>UI not built yet. Engine lives in <code>src/engine.js</code>, run <code>node tests/engine.test.js</code>.</p>
+<div class="wrap">
+  <header>
+    <h1>Plug-in solar and battery payback calculator</h1>
+    <p>For plug-in (balcony or backyard) solar and plug-in batteries in Australia. Output is capped at the inverter limit and exports are usually unpaid, so payback depends on how much of the power you use yourself.</p>
+  </header>
+
+  <div class="layout">
+    <form id="inputs" class="card" autocomplete="off" novalidate>
+      <h3>System</h3>
+      <label>Kit
+        <select id="kit"></select>
+      </label>
+      <div class="row2">
+        <label>City <select id="city"></select></label>
+        <label>Mounting <select id="mounting"></select></label>
+      </div>
+      <div class="row2">
+        <label>Panels (W DC) <input type="number" id="panelWatts" min="0" step="10"></label>
+        <label>Inverter cap (W) <input type="number" id="inverterCapWatts" min="0" step="50"></label>
+      </div>
+      <label>Upfront cost ($) <input type="number" id="costDollars" min="0" step="50"></label>
+
+      <h3>Battery</h3>
+      <label class="check"><input type="checkbox" id="hasBattery"> Include a plug-in battery</label>
+      <fieldset id="batteryFields">
+        <div class="row2">
+          <label>Usable (kWh) <input type="number" id="usableKWh" min="0" step="0.1"></label>
+          <label>Power (W) <input type="number" id="batteryWatts" min="0" step="50"></label>
+        </div>
+        <label class="check"><input type="checkbox" id="gridCharge"> Charge from grid off-peak (TOU only)</label>
+      </fieldset>
+
+      <h3>Household</h3>
+      <label>When are you home?
+        <select id="occupancy"></select>
+      </label>
+      <details class="adv">
+        <summary>Edit load profile (watts)</summary>
+        <div class="row2">
+          <label>Baseload, all day <input type="number" id="baseload" min="0" step="10"></label>
+          <label>Morning, 6 to 9 <input type="number" id="morning" min="0" step="10"></label>
+          <label>Daytime, 9 to 5 <input type="number" id="day" min="0" step="10"></label>
+          <label>Evening, 5 to 10 <input type="number" id="evening" min="0" step="10"></label>
+        </div>
+      </details>
+
+      <h3>Tariff</h3>
+      <label>Tariff
+        <select id="tariff"></select>
+      </label>
+      <label class="flat-only">Flat rate (c/kWh) <input type="number" id="flat" min="0" step="0.5"></label>
+      <div class="tou-only">
+        <div class="row2">
+          <label>Peak (c/kWh) <input type="number" id="peak" min="0" step="0.5"></label>
+          <label>Shoulder (c/kWh) <input type="number" id="shoulder" min="0" step="0.5"></label>
+          <label>Off-peak (c/kWh) <input type="number" id="offPeak" min="0" step="0.5"></label>
+        </div>
+        <span class="hint" style="font-size:12px;color:var(--muted)">Peak 3 pm to 9 pm, off-peak 10 pm to 7 am, shoulder otherwise.</span>
+      </div>
+      <label style="margin-top:10px">Feed-in tariff (c/kWh) <span class="hint">Usually 0 for plug-in systems</span>
+        <input type="number" id="feedInCents" min="0" step="0.5">
+      </label>
+
+      <details class="adv">
+        <summary>More assumptions</summary>
+        <div class="row2">
+          <label>Shading loss (%) <input type="number" id="shadingLoss" min="0" max="100" step="1"></label>
+          <label>System efficiency (%) <input type="number" id="systemEfficiency" min="0" max="100" step="1"></label>
+          <label>Round trip eff. (%) <input type="number" id="roundTripEff" min="0" max="100" step="1"></label>
+          <label>Price rise (%/yr) <input type="number" id="priceEscalation" min="0" step="0.5"></label>
+          <label>Degradation (%/yr) <input type="number" id="degradation" min="0" step="0.1"></label>
+          <label>Years shown <input type="number" id="years" min="1" max="30" step="1"></label>
+        </div>
+      </details>
+    </form>
+
+    <main>
+      <section class="card" aria-live="polite">
+        <div class="hero">
+          <div>
+            <div class="hero-label">Payback</div>
+            <div class="hero-value" id="payback">–</div>
+          </div>
+          <div class="hero-note" id="paybackNote"></div>
+        </div>
+        <div class="tiles">
+          <div class="tile"><div class="l">Saving, year 1</div><div class="v" id="tSaving">–</div><div class="s">per year</div></div>
+          <div class="tile"><div class="l">Generation</div><div class="v" id="tGen">–</div><div class="s">kWh per year</div></div>
+          <div class="tile"><div class="l">Solar used at home</div><div class="v" id="tSelf">–</div><div class="s" id="tSelfSub">of generation</div></div>
+          <div class="tile"><div class="l" id="tNetLabel">Net benefit</div><div class="v" id="tNet">–</div><div class="s">after upfront cost</div></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="chart-head">
+          <h2>Cumulative position by year</h2>
+          <div class="legend">
+            <span><i class="key-rect" style="background:var(--neg)"></i>Still paying off</span>
+            <span><i class="key-rect" style="background:var(--pos)"></i>Ahead</span>
+          </div>
+        </div>
+        <div class="chart" id="cashChart"></div>
+        <details class="table">
+          <summary>Show as table</summary>
+          <div class="table-scroll"><table id="cashTable"></table></div>
+        </details>
+      </section>
+
+      <section class="card">
+        <div class="chart-head">
+          <h2>Typical day</h2>
+          <div class="seg" role="group" aria-label="Season">
+            <button type="button" data-season="summer" aria-pressed="true">January</button>
+            <button type="button" data-season="winter" aria-pressed="false">July</button>
+          </div>
+        </div>
+        <div class="legend" style="margin-bottom:6px">
+          <span><i class="key-line" style="background:var(--gen)"></i>Solar output</span>
+          <span><i class="key-line" style="background:var(--load)"></i>Household use</span>
+        </div>
+        <div class="chart" id="dayChart"></div>
+      </section>
+
+      <section class="card energy">
+        <h2>Energy per year</h2>
+        <dl id="energy"></dl>
+      </section>
+
+      <section class="card notes">
+        <h2>How this is worked out</h2>
+        <p>Each month is modelled as one typical day. Solar output comes from average sun hours for your city and mounting, and is clipped hour by hour at the inverter cap. Each hour, solar goes first to the house, then to the battery, then out to the grid. The battery then covers evening use. Savings rise with electricity prices and fall slowly as panels degrade. Future savings are not discounted.</p>
+        <ul>
+          <li>No weather variation: real years will be better or worse.</li>
+          <li>Sun hour figures and kit prices are provisional estimates.</li>
+          <li>Standby draw from the inverter and battery is not included.</li>
+          <li>Daily supply charges are unchanged by plug-in systems and are left out.</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+
+  <footer>Smart Energy Lab Services Pty Ltd · Estimates only, not financial advice.</footer>
+</div>
+
 <script src="src/engine.js"></script>
 <script src="src/presets.js"></script>
+<script src="src/app.js"></script>
 </body>
 </html>

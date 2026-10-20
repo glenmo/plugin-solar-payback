@@ -36,6 +36,6 @@ const tariffs = {
   tou_vic: { name: 'Time of use (example)', type: 'tou', peak: 40, shoulder: 28, offPeak: 20, peakStart: 15, peakEnd: 21, offPeakStart: 22, offPeakEnd: 7 },
 };
 
-const api = { kits, occupancy, tariffs };
-if (typeof module !== 'undefined') module.exports = api;
-if (typeof window !== 'undefined') window.PaybackPresets = api;
+const presetsApi = { kits, occupancy, tariffs };
+if (typeof module !== 'undefined') module.exports = presetsApi;
+if (typeof window !== 'undefined') window.PaybackPresets = presetsApi;

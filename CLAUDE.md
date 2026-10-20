@@ -23,7 +23,7 @@ To view the app, serve the folder (`python3 -m http.server`) and open it. Openin
 - `data/yield.json` holds monthly peak sun hours per city × mounting (`tilted`, `flat`, `vertical`), Jan–Dec. The engine takes it as an argument (`calculate(inputs, yieldTable)`) rather than loading it, so the browser will need to fetch it.
 - Inputs are a single flat object; callers spread `engine.defaults`, then a preset kit (`presets.kits.*`), then overrides. Kits set panel/inverter/battery/cost fields; `loadProfile` and `tariff` come from `presets.occupancy` / `presets.tariffs`. `battery: null` means no battery; `panelWatts: 0` means battery only.
 - Pipeline: `calculate` → `annualResult` (12 months, one typical 24 h day each: `hourlyGeneration` + `hourlyLoad` → `dispatchDay`, scaled by days in month) → `cashFlow` (degradation, price escalation, interpolated payback year).
-- `dispatchDay` runs each day twice so battery state of charge settles. The order within each hour is: direct self-consumption → charge battery from surplus → export → battery discharge (held during TOU off-peak) → grid import → optional grid charge in off-peak. `docs/METHOD.md` documents this order and the known simplifications. Update it when the method changes.
+- `dispatchDay` runs each day twice so battery state of charge settles. The order within each hour is: direct self-consumption → charge battery from surplus → export → battery discharge (held during TOU off-peak, and a peak reserve kept through the shoulder) → grid import → optional grid charge in off-peak. `docs/METHOD.md` documents this order and the known simplifications. Update it when the method changes.
 
 ## Domain conventions
 

@@ -24,6 +24,23 @@
   };
   const kwh = (v) => Math.round(v).toLocaleString('en-AU');
 
+  // ---------- theme ----------
+  // "auto" removes data-theme so the CSS follows prefers-color-scheme. The
+  // inline script in index.html applies the saved choice before first paint.
+  function setTheme(mode, save) {
+    if (mode === 'light' || mode === 'dark') document.documentElement.dataset.theme = mode;
+    else { mode = 'auto'; delete document.documentElement.dataset.theme; }
+    document.querySelectorAll('[data-theme-choice]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.themeChoice === mode)));
+    if (save) {
+      try {
+        if (mode === 'auto') localStorage.removeItem('theme');
+        else localStorage.setItem('theme', mode);
+      } catch (e) { /* storage blocked: the choice lasts for this page view only */ }
+    }
+  }
+  setTheme(document.documentElement.dataset.theme, false);
+  document.querySelectorAll('[data-theme-choice]').forEach((b) => b.addEventListener('click', () => setTheme(b.dataset.themeChoice, true)));
+
   // ---------- form setup ----------
   function fillSelect(sel, entries) {
     sel.replaceChildren();

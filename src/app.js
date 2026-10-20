@@ -10,6 +10,7 @@
   let yieldTable = null;
   let lastResult = null;
   let season = 'summer';
+  let tariffBeforeBatteryOnly = null; // set while a battery-only kit has switched the tariff to TOU
 
   // ---------- formatting ----------
   const money = (v) => {
@@ -70,10 +71,16 @@
       setNum('roundTripEff', Math.round(k.battery.roundTripEff * 100));
       $('gridCharge').checked = !!k.battery.gridCharge;
     }
-    // Battery only kits only make sense on time of use
+    // Battery only kits only make sense on time of use. Switch to it, and switch
+    // back when leaving the kit unless the tariff was changed in the meantime.
     if (k.panelWatts === 0 && $('tariff').value === 'flat_32') {
+      tariffBeforeBatteryOnly = 'flat_32';
       $('tariff').value = 'tou_vic';
       applyTariff('tou_vic');
+    } else if (k.panelWatts > 0 && tariffBeforeBatteryOnly) {
+      $('tariff').value = tariffBeforeBatteryOnly; // its rate field still holds the earlier value
+      tariffBeforeBatteryOnly = null;
+      syncTariffFields();
     }
     syncBatteryFields();
   }
@@ -475,7 +482,7 @@
 
     $('kit').addEventListener('change', (e) => { applyKit(e.target.value); render(); });
     $('occupancy').addEventListener('change', (e) => { applyOccupancy(e.target.value); render(); });
-    $('tariff').addEventListener('change', (e) => { applyTariff(e.target.value); render(); });
+    $('tariff').addEventListener('change', (e) => { tariffBeforeBatteryOnly = null; applyTariff(e.target.value); render(); });
     $('hasBattery').addEventListener('change', toggleBattery);
     $('inputs').addEventListener('input', render);
     $('inputs').addEventListener('change', render);

@@ -72,6 +72,26 @@ const tariffs = {
     peakWindows: [[6, 10], [16, 24]], offPeakWindows: [[10, 16]],
     windows: 'Peak 6 am to 10 am and 4 pm to midnight. Off-peak is the solar sponge, 10 am to 4 pm. Shoulder is the overnight off-peak rate, midnight to 6 am.',
   },
+  // DMO 2026–27 Solar Sharer Offer (AER DMO 2026–27 final determination, Appendix C 9(6) and 10).
+  // Usage in the free period is free up to 24 kWh a day, which a household and a plug-in battery
+  // don't reach, so the cap isn't modelled.
+  sso_ausgrid: {
+    name: 'Solar Sharer Offer (Ausgrid)', type: 'tou', peak: 63.72, shoulder: 27.56, offPeak: 27.56, free: 0,
+    peakStart: 15, peakEnd: 21, offPeakStart: 21, offPeakEnd: 15, peakMonths: [0, 1, 2, 5, 6, 7, 10, 11],
+    freeWindows: [[11, 14]],
+    windows: 'Free 11 am to 2 pm. Peak 3 pm to 9 pm, November to March and June to August. Off-peak at all other times. No shoulder.',
+  },
+  sso_energex: {
+    name: 'Solar Sharer Offer (Energex)', type: 'tou', peak: 48.90, shoulder: 26.41, offPeak: 8.10, free: 0,
+    peakStart: 16, peakEnd: 21, offPeakStart: 14, offPeakEnd: 16, freeWindows: [[11, 14]],
+    windows: 'Free 11 am to 2 pm. Peak 4 pm to 9 pm, off-peak 2 pm to 4 pm, shoulder 9 pm to 11 am.',
+  },
+  // The solar soak is SAPN's cheapest paid period so it maps to offPeak; its overnight off-peak maps to shoulder.
+  sso_sapn: {
+    name: 'Solar Sharer Offer (SA Power Networks)', type: 'tou', peak: 58.84, shoulder: 35.17, offPeak: 19.66, free: 0,
+    peakWindows: [[6, 10], [16, 24]], offPeakWindows: [[10, 12], [15, 16]], freeWindows: [[12, 15]],
+    windows: 'Free 12 pm to 3 pm. Peak 6 am to 10 am and 4 pm to midnight. Off-peak is the solar soak, 10 am to 12 pm and 3 pm to 4 pm. Shoulder is the overnight off-peak rate, midnight to 6 am.',
+  },
   // Synergy Midday Saver 2026–27, from secondary sources quoting Synergy's brochure. The midday
   // "super off-peak" maps to offPeak; the overnight off-peak maps to shoulder.
   tou_synergy: {
@@ -110,6 +130,9 @@ const touByCity = {
   perth: 'tou_synergy', hobart: 'tou_aurora', canberra: 'tou_actewagl', darwin: 'tou_jacana',
 };
 
-const presetsApi = { kits, occupancy, tariffs, defaultOffers, touByCity };
+// Each DMO city's Solar Sharer Offer.
+const ssoByCity = { sydney: 'sso_ausgrid', brisbane: 'sso_energex', adelaide: 'sso_sapn' };
+
+const presetsApi = { kits, occupancy, tariffs, defaultOffers, touByCity, ssoByCity };
 if (typeof module !== 'undefined') module.exports = presetsApi;
 if (typeof window !== 'undefined') window.PaybackPresets = presetsApi;

@@ -83,9 +83,21 @@ sets its unused period to the same rate as the period it falls into.
 (b) Appendix C 9(3), residential time of use tariff cap: Ausgrid 60.1966 / 24.0387 c, with
 the peak only Nov to Mar and Jun to Aug, every day; Energex 47.7858 / 25.2956 / 6.9848 c;
 SAPN 56.2218 c peak, 32.5506 c overnight off-peak, 17.0431 c solar sponge. Windows are local
-time, including daylight saving. Checked 2026-10-20. The determination also sets a Solar
-Sharer Offer tariff (Appendix C 9(6)), with three free hours in the middle of the day. The
-calculator doesn't model it.
+time, including daylight saving. Checked 2026-10-20.
+
+Solar Sharer Offer (SSO) presets, from Appendix C 9(6) and 10 of the same determination.
+Each has a free usage period at 0 c on every day of the year:
+
+| Preset | Free | Peak | Shoulder | Off-peak |
+|---|---|---|---|---|
+| `sso_ausgrid` Sydney | 11 am to 2 pm | 63.72 c, 3 pm to 9 pm, Nov to Mar and Jun to Aug | none | 27.56 c, other times |
+| `sso_energex` Brisbane | 11 am to 2 pm | 48.90 c, 4 pm to 9 pm | 26.41 c, 9 pm to 11 am | 8.10 c, 2 pm to 4 pm |
+| `sso_sapn` Adelaide | 12 pm to 3 pm | 58.84 c, 6 am to 10 am and 4 pm to midnight | 35.17 c overnight, midnight to 6 am | 19.66 c solar soak, 10 am to 12 pm and 3 pm to 4 pm |
+
+Usage above 24 kWh in the free period is charged at the reasonable use tariff cap. A
+household plus a plug-in battery doesn't reach that, so the cap isn't modelled. Free hours
+are when plug-in solar generates, so the SSO cuts what solar saves. A battery can fill
+free and discharge into the peak.
 
 (c) talkenergy.com.au and perthsolarwarehouse.com.au, quoting Synergy's 1 July 2026
 brochure. They agree to four decimal places (55.3253, 24.3431, 8.8520). Not checked
@@ -100,6 +112,10 @@ Windows can wrap midnight (22 to 7) or sit inside the day (11 to 16), and a tari
 list several (`peakWindows`, `offPeakWindows`). With `peakMonths`, peak hours outside
 those months are off-peak. A day with no peak hours has nothing to shift energy into, so
 the battery then works as on a flat tariff: no holding, no reserve, no grid charging.
+Free hours (`freeWindows`) apply all year. The battery holds through them and grid charges
+in them, and paid off-peak charging before them leaves room for that free charging. On a
+day with free hours but no peak (Ausgrid's SSO in April, May, September and October), the
+battery charges free and discharges at the off-peak rate.
 With `peakWeekdaysOnly` (Aurora), each month also runs a weekend day with no peak, and
 the year is weighted 5 weekdays to 2 weekend days. Each day type settles its own battery
 state, so charge carried from Friday into the weekend isn't modelled.
@@ -114,10 +130,11 @@ state, so charge carried from Friday into the weekend isn't modelled.
    due to refill it before the peak. This uses foresight of the typical day.
 5. Grid meets the rest
 6. On TOU with grid charging enabled, battery charges from grid during off-peak if
-   peak rate x round trip efficiency beats the off-peak rate. It leaves room for the PV
+   peak rate x round trip efficiency beats the off-peak rate, or in free hours (SSO). It leaves room for the PV
    surplus still due before the next peak, looking across midnight to the next morning,
    less any shoulder use before that PV arrives. This stops a solar soak, or an off-peak
-   that runs through the morning, filling the battery from the grid and exporting the PV
+   that runs through the morning, filling the battery from the grid and exporting the PV.
+   Solar charging in the same hour counts towards the battery's charge rate
 
 Each month is run twice so the battery state settles, then scaled by days in month.
 

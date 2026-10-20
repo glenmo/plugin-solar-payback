@@ -151,8 +151,35 @@ const hobBo = engine.calculate({ ...engine.defaults, ...presets.kits.battery_onl
 const wkdaySaving = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].reduce((t, m) => t + engine.dispatchDay(new Array(24).fill(0), flatLoad, boKit, aur, 0, m, false).netSavingDollars * [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][m], 0);
 assert(Math.abs(hobBo.annual.savingDollars - wkdaySaving * 5 / 7) < 0.5, 'weekday-only peak should count 5 days in 7');
 
+// 5g. Solar Sharer Offer: free midday hours. Battery only should charge free (so cost
+//     nothing to charge), and solar should be worth less than on the DMO TOU because
+//     the free hours are when it generates.
+const ssoRuns = [];
+for (const [city, key, touKey] of [['sydney', 'sso_ausgrid', 'tou_ausgrid'], ['brisbane', 'sso_energex', 'tou_energex'], ['adelaide', 'sso_sapn', 'tou_sapn']]) {
+  const t = presets.tariffs[key];
+  const b = run(`Battery only, ${t.name}`, {
+    ...presets.kits.battery_only_2kwh, city, tariff: t, loadProfile: presets.occupancy.out_during_day,
+  });
+  assert(b.annual.gridCharged > 0 && b.annual.savingDollars > 0, `${key} battery only should charge free and save`);
+  assert(Math.abs(b.annual.fromBattery - b.annual.gridCharged * boKit.roundTripEff) < 1, `${key} round trip losses off`);
+  const so = run(`${city} solar only, ${t.name}, home all day`, {
+    ...presets.kits.solar_only_800, city, tariff: t, loadProfile: presets.occupancy.home_all_day,
+  });
+  const soTou = engine.calculate({ ...engine.defaults, ...presets.kits.solar_only_800, city, tariff: presets.tariffs[touKey], loadProfile: presets.occupancy.home_all_day }, yieldTable);
+  assert(so.annual.savingDollars < soTou.annual.savingDollars, `solar should save less on ${key} than ${touKey}`);
+  ssoRuns.push(b, so);
+}
+// Free hours: no discharge into them, and paid off-peak charging just before them leaves room.
+const sapnSso = presets.tariffs.sso_sapn;
+const sapnDay = engine.dispatchDay(new Array(24).fill(0), flatLoad, boKit, sapnSso, 0, 0);
+assert(Math.abs(sapnDay.netSavingDollars * 100 - sapnDay.fromBattery * sapnSso.peak) < 1, 'SAPN SSO battery should charge only in free hours and discharge only in the peak');
+// Ausgrid in April has free hours but no peak: charge free, spend at the off-peak rate.
+const ausSso = presets.tariffs.sso_ausgrid;
+const aprSso = engine.dispatchDay(new Array(24).fill(0), flatLoad, boKit, ausSso, 0, 3);
+assert(aprSso.gridCharged > 0 && Math.abs(aprSso.netSavingDollars * 100 - aprSso.fromBattery * ausSso.offPeak) < 1, 'Ausgrid SSO in April should charge free and discharge at off-peak');
+
 // 6. Energy balance: load = direct + battery + import for each run
-for (const r of [base, out, bat, hob, bo, sbt, sot, bov, sbv, sov, ...dmoRuns]) {
+for (const r of [base, out, bat, hob, bo, sbt, sot, bov, sbv, sov, ...dmoRuns, ...ssoRuns]) {
   const a = r.annual;
   const lhs = a.load;
   const rhs = a.selfConsumed + a.fromBattery + a.imported;

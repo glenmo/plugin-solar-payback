@@ -58,11 +58,13 @@ function inWindows(h, windows) {
   return windows.some(([s, e]) => (s < e ? h >= s && h < e : h >= s || h < e));
 }
 
-// TOU period for an hour of a month (0 = Jan): 'peak', 'shoulder' or 'offPeak'.
+// TOU period for an hour of a month (0 = Jan): 'peak', 'shoulder', 'offPeak' or 'free'.
 // A tariff gives either peakStart/peakEnd and offPeakStart/offPeakEnd, or lists of
 // windows in peakWindows/offPeakWindows. If it sets peakMonths, peak hours in other
 // months are off-peak. If it sets peakWeekdaysOnly, peak hours on a weekend day are off-peak.
+// Hours in freeWindows (the Solar Sharer Offer's free usage period) are 'free' all year.
 function periodForHour(tariff, h, month, weekend) {
+  if (tariff.freeWindows && inWindows(h, tariff.freeWindows)) return 'free';
   const peakMonth = !tariff.peakMonths || month === undefined || tariff.peakMonths.includes(month);
   const peakDay = !(weekend && tariff.peakWeekdaysOnly);
   const peak = tariff.peakWindows || [[tariff.peakStart, tariff.peakEnd]];
@@ -93,13 +95,16 @@ function dispatchDay(gen, load, battery, tariff, feedInCents, month, weekend) {
   // spending it in the shoulder. reserve[h] is the battery output still wanted
   // in peak hours after h (at most a full battery), less the PV surplus expected
   // to top it up before then.
-  // pvAhead[h] is the PV surplus still to come after hour h and before the next
-  // peak, which grid charging leaves room for so it isn't exported instead.
-  // A TOU day with no peak hours (outside peakMonths) has nothing to shift energy
-  // into, so the battery then works as on a flat tariff.
+  // pvAhead[h] is the free energy (PV surplus, or grid charging in free hours) still
+  // to come after hour h and before the next peak, which paid grid charging leaves
+  // room for.
+  // A TOU day with no peak or free hours (outside peakMonths) has nothing to shift
+  // energy into, so the battery then works as on a flat tariff. With free hours but
+  // no peak, it charges free and spends it at the off-peak rate.
   const period = [];
   for (let h = 0; h < 24; h++) period.push(tariff.type === 'tou' ? periodForHour(tariff, h, month, weekend) : 'flat');
-  const shifting = period.includes('peak');
+  const hasPeak = period.includes('peak');
+  const shifting = hasPeak || period.includes('free');
   const reserve = new Array(24).fill(0);
   const pvAhead = new Array(24).fill(0);
   if (cap > 0 && shifting) {
@@ -117,6 +122,7 @@ function dispatchDay(gen, load, battery, tariff, feedInCents, month, weekend) {
       const h = i % 24;
       if (i < 24) pvAhead[h] = ahead;
       if (period[h] === 'peak') ahead = 0;
+      else if (period[h] === 'free') ahead += maxCharge;
       else {
         ahead += Math.min(Math.max(gen[h] - load[h], 0), maxCharge);
         if (period[h] === 'shoulder') ahead = Math.max(0, ahead - Math.min(Math.max(load[h] - gen[h], 0), maxDischarge));
@@ -141,11 +147,12 @@ function dispatchDay(gen, load, battery, tariff, feedInCents, month, weekend) {
       l -= direct;
 
       // 2. Surplus PV into battery
+      let pvCharged = 0;
       if (g > 0 && cap > 0) {
         const room = (cap - soc) / eff;
-        const chg = Math.min(g, room, maxCharge);
-        soc += chg * eff;
-        g -= chg;
+        pvCharged = Math.min(g, room, maxCharge);
+        soc += pvCharged * eff;
+        g -= pvCharged;
       }
       // 3. Remaining surplus exported
       if (g > 0) {
@@ -153,11 +160,13 @@ function dispatchDay(gen, load, battery, tariff, feedInCents, month, weekend) {
         savingCents += g * feedInCents;
       }
 
-      // 4. Battery covers remaining load (but hold charge through off peak on TOU, it's cheaper
-      //    to import then, and keep the peak reserve through the shoulder)
-      const isOffPeak = shifting && period[h] === 'offPeak';
+      // 4. Battery covers remaining load (but hold charge through free hours, and through off
+      //    peak on a day with a peak, since importing is cheaper then; and keep the peak
+      //    reserve through the shoulder)
+      const free = period[h] === 'free';
+      const hold = free || (hasPeak && period[h] === 'offPeak');
       const spare = soc * eff - (period[h] === 'peak' ? 0 : reserve[h]);
-      if (l > 0 && spare > 0 && !isOffPeak) {
+      if (l > 0 && spare > 0 && !hold) {
         const dis = Math.min(l, spare, maxDischarge);
         soc -= dis / eff;
         fromBattery += dis;
@@ -167,13 +176,14 @@ function dispatchDay(gen, load, battery, tariff, feedInCents, month, weekend) {
       // 5. Grid import for the rest
       if (l > 0) imported += l;
 
-      // 6. Optional TOU arbitrage: charge from grid in off peak if it beats the peak rate after losses,
-      //    leaving room for PV surplus still due before the peak
-      if (battery && battery.gridCharge && isOffPeak) {
-        const worth = tariff.peak * battery.roundTripEff > tariff.offPeak * 1.05;
-        const room = (cap - soc) / eff - pvAhead[h];
+      // 6. Optional TOU arbitrage: charge from grid in free hours, or in off peak if it beats
+      //    the peak rate after losses, leaving room for free energy still due before the peak.
+      //    PV charging this hour counts towards the charge rate.
+      if (battery && battery.gridCharge && hold) {
+        const worth = free || tariff.peak * battery.roundTripEff > tariff.offPeak * 1.05;
+        const room = Math.min((cap - soc) / eff - (free ? 0 : pvAhead[h]), maxCharge - pvCharged);
         if (worth && room > 0) {
-          const chg = Math.min(room, maxCharge);
+          const chg = room;
           soc += chg * eff;
           gridCharged += chg;
           costCents += chg * rate;

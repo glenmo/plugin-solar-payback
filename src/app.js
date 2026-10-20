@@ -91,6 +91,13 @@
     return presets.touByCity[$('city').value] || 'tou_vic';
   }
 
+  // The tariff list offers only the selected city's tariffs, plus the example TOU.
+  function fillTariffs() {
+    const c = $('city').value;
+    const keys = ['default_offer', presets.touByCity[c], presets.ssoByCity[c], 'tou_vic'].filter(Boolean);
+    fillSelect($('tariff'), [...new Set(keys)].map((k) => [k, presets.tariffs[k].name]));
+  }
+
   function applyOccupancy(key) {
     const o = presets.occupancy[key];
     for (const f of ['baseload', 'morning', 'day', 'evening']) setNum(f, o[f]);
@@ -476,10 +483,10 @@
     fillSelect($('city'), Object.entries(yieldTable.cities).map(([k, v]) => [k, v.name]));
     fillSelect($('mounting'), Object.entries(yieldTable.mountings).map(([k, v]) => [k, v]));
     fillSelect($('occupancy'), Object.entries(presets.occupancy).map(([k, v]) => [k, v.name]));
-    fillSelect($('tariff'), Object.entries(presets.tariffs).map(([k, v]) => [k, v.name]));
 
     const d = engine.defaults;
     $('city').value = d.city;
+    fillTariffs();
     $('mounting').value = d.mounting;
     $('occupancy').value = 'home_all_day';
     $('tariff').value = 'default_offer';
@@ -501,10 +508,18 @@
     $('occupancy').addEventListener('change', (e) => { applyOccupancy(e.target.value); render(); });
     // A new city brings its own default offer. While a battery-only kit has switched
     // to TOU, the flat field still updates so the rate is right when switching back.
+    // A city's own TOU or SSO switches to the new city's (an SSO falls back to its TOU
+    // where there's no SSO). While a battery-only kit has switched to TOU, the flat field
+    // still updates so the rate is right when switching back.
     $('city').addEventListener('change', () => {
-      if ($('tariff').value === 'default_offer' || tariffBeforeBatteryOnly === 'default_offer') { applyDefaultOffer(); syncTariffFields(); }
-      // A TOU the battery-only kit picked follows the city too.
-      if (tariffBeforeBatteryOnly && $('tariff').value !== cityTou()) { $('tariff').value = cityTou(); applyTariff(cityTou()); }
+      const prev = $('tariff').value;
+      let next = prev;
+      if (Object.values(presets.touByCity).includes(prev)) next = cityTou();
+      else if (Object.values(presets.ssoByCity).includes(prev)) next = presets.ssoByCity[$('city').value] || cityTou();
+      fillTariffs();
+      $('tariff').value = next;
+      if (next !== prev || next === 'default_offer') applyTariff(next);
+      if (tariffBeforeBatteryOnly === 'default_offer') { applyDefaultOffer(); syncTariffFields(); }
     });
     $('tariff').addEventListener('change', (e) => { tariffBeforeBatteryOnly = null; applyTariff(e.target.value); render(); });
     $('hasBattery').addEventListener('change', toggleBattery);

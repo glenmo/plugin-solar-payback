@@ -63,7 +63,15 @@ determination before release.
 
 Suburbs on other networks pay different rates (for example 27.35 to 31.98 c in other
 Melbourne zones), so the rate stays editable. Changing city resets it to that city's offer.
-The TOU preset is still an example, not a regulated offer.
+Two TOU presets:
+- `tou_vdo`: the Victorian Default Offer three-period TOU for CitiPower (ESC VDO 2026–27
+  Price Determination, Schedule 3): peak 38.31 c 4 pm to 9 pm, solar soak 16.59 c 11 am to
+  4 pm, 21.17 c at all other times. The solar soak is the cheapest period, so it is the
+  engine's `offPeak` and the VDO's "off-peak" is the engine's `shoulder`. The battery-only
+  kit switches to it in Melbourne.
+- `tou_vic`: an example (40 / 28 / 20 c, overnight off-peak), used elsewhere.
+
+The off-peak window can wrap midnight (22 to 7) or sit inside the day (11 to 16).
 
 ## Dispatch, each hour
 1. PV meets load directly
@@ -75,7 +83,9 @@ The TOU preset is still an example, not a regulated offer.
    due to refill it before the peak. This uses foresight of the typical day.
 5. Grid meets the rest
 6. On TOU with grid charging enabled, battery charges from grid during off-peak if
-   peak rate x round trip efficiency beats the off-peak rate
+   peak rate x round trip efficiency beats the off-peak rate. It leaves room for the PV
+   surplus still due before the next peak, so a midday solar soak doesn't fill the
+   battery from the grid and export the PV
 
 Each month is run twice so the battery state settles, then scaled by days in month.
 

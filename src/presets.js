@@ -47,7 +47,17 @@ const defaultOffers = {
 
 const tariffs = {
   default_offer: { name: 'Default offer for your city (flat)', type: 'flat', flat: 32 },
-  tou_vic: { name: 'Time of use (example)', type: 'tou', peak: 40, shoulder: 28, offPeak: 20, peakStart: 15, peakEnd: 21, offPeakStart: 22, offPeakEnd: 7 },
+  // VDO three-period TOU (ESC VDO 2026–27 Price Determination, Schedule 3, CitiPower). The VDO's
+  // solar soak is the cheapest period so it maps to offPeak; the VDO's "off-peak" maps to shoulder.
+  tou_vdo: {
+    name: 'Victorian Default Offer time of use (CitiPower)', type: 'tou', peak: 38.31, shoulder: 21.17, offPeak: 16.59,
+    peakStart: 16, peakEnd: 21, offPeakStart: 11, offPeakEnd: 16,
+    windows: 'Peak 4 pm to 9 pm. Off-peak is the VDO solar soak, 11 am to 4 pm. Shoulder is the VDO off-peak rate, all other times.',
+  },
+  tou_vic: {
+    name: 'Time of use (example)', type: 'tou', peak: 40, shoulder: 28, offPeak: 20, peakStart: 15, peakEnd: 21, offPeakStart: 22, offPeakEnd: 7,
+    windows: 'Peak 3 pm to 9 pm, off-peak 10 pm to 7 am, shoulder otherwise.',
+  },
 };
 
 const presetsApi = { kits, occupancy, tariffs, defaultOffers };

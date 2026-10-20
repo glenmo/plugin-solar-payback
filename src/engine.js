@@ -53,12 +53,16 @@ function hourlyLoad(profile) {
   return load;
 }
 
-// Tariff rate (c/kWh) for an hour.
+// Tariff rate (c/kWh) for an hour. The off-peak window may wrap midnight (22 to 7)
+// or sit inside the day (a solar soak, 11 to 16).
 function rateForHour(tariff, h) {
   if (tariff.type === 'flat') return tariff.flat;
   if (h >= tariff.peakStart && h < tariff.peakEnd) return tariff.peak;
-  if (h >= tariff.offPeakStart || h < tariff.offPeakEnd) return tariff.offPeak;
-  return tariff.shoulder;
+  const wraps = tariff.offPeakStart > tariff.offPeakEnd;
+  const offPeak = wraps
+    ? h >= tariff.offPeakStart || h < tariff.offPeakEnd
+    : h >= tariff.offPeakStart && h < tariff.offPeakEnd;
+  return offPeak ? tariff.offPeak : tariff.shoulder;
 }
 
 // Dispatch one typical day. Returns kWh totals and dollar saving for the day.
@@ -76,13 +80,23 @@ function dispatchDay(gen, load, battery, tariff, feedInCents) {
   // spending it in the shoulder. reserve[h] is the battery output still wanted
   // in peak hours after h (at most a full battery), less the PV surplus expected
   // to top it up before then.
+  // pvAhead[h] is the PV surplus still to come after hour h and before the next
+  // peak, which grid charging leaves room for so it isn't exported instead.
   const reserve = new Array(24).fill(0);
+  const pvAhead = new Array(24).fill(0);
   if (cap > 0 && tariff.type === 'tou') {
-    let need = 0, refill = 0;
+    let need = 0, refill = 0, ahead = 0;
     for (let h = 23; h >= 0; h--) {
       reserve[h] = Math.max(0, Math.min(need, cap * eff) - refill * eff * eff);
-      if (rateForHour(tariff, h) === tariff.peak) need += Math.min(Math.max(load[h] - gen[h], 0), maxDischarge);
-      else if (need > 0) refill += Math.min(Math.max(gen[h] - load[h], 0), maxCharge);
+      pvAhead[h] = ahead;
+      const surplus = Math.min(Math.max(gen[h] - load[h], 0), maxCharge);
+      if (rateForHour(tariff, h) === tariff.peak) {
+        need += Math.min(Math.max(load[h] - gen[h], 0), maxDischarge);
+        ahead = 0;
+      } else {
+        if (need > 0) refill += surplus;
+        ahead += surplus;
+      }
     }
   }
 
@@ -129,11 +143,12 @@ function dispatchDay(gen, load, battery, tariff, feedInCents) {
       // 5. Grid import for the rest
       if (l > 0) imported += l;
 
-      // 6. Optional TOU arbitrage: charge from grid in off peak if it beats the peak rate after losses
+      // 6. Optional TOU arbitrage: charge from grid in off peak if it beats the peak rate after losses,
+      //    leaving room for PV surplus still due before the peak
       if (battery && battery.gridCharge && tariff.type === 'tou' && rate === tariff.offPeak) {
         const worth = tariff.peak * battery.roundTripEff > tariff.offPeak * 1.05;
-        if (worth && soc < cap) {
-          const room = (cap - soc) / eff;
+        const room = (cap - soc) / eff - pvAhead[h];
+        if (worth && room > 0) {
           const chg = Math.min(room, maxCharge);
           soc += chg * eff;
           gridCharged += chg;

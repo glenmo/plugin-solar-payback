@@ -231,7 +231,7 @@ footer { margin-top: 32px; color: var(--muted); font-size: 12px; }
           <label>Shoulder (c/kWh) <input type="number" id="shoulder" min="0" step="0.5"></label>
           <label>Off-peak (c/kWh) <input type="number" id="offPeak" min="0" step="0.5"></label>
         </div>
-        <span class="hint" style="font-size:12px;color:var(--muted)">Peak 3 pm to 9 pm, off-peak 10 pm to 7 am, shoulder otherwise.</span>
+        <span class="hint" id="touWindows" style="font-size:12px;color:var(--muted)"></span>
       </div>
       <label style="margin-top:10px">Feed-in tariff (c/kWh) <span class="hint">Usually 0 for plug-in systems</span>
         <input type="number" id="feedInCents" min="0" step="0.5">
